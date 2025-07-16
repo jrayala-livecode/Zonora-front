@@ -4,9 +4,7 @@ export default defineNuxtConfig({
   // target: 'static',
 
   // ❌ Quitar esto completamente si es SPA estática
-  nitro: {
-    preset: undefined
-  },
+  target: 'static',
 
   generate: {
     fallback: true // Necesario para que Netlify sirva index.html en rutas desconocidas
