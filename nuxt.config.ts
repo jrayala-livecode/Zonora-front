@@ -1,29 +1,33 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
+  ssr: false, // ⚠️ desactiva SSR (puro SPA)
+  // target ya no se usa en Nuxt 3, pero no hace daño si lo dejás
+  // target: 'static',
+
+  // ❌ Quitar esto completamente si es SPA estática
+  nitro: {
+    preset: undefined
+  },
+
+  generate: {
+    fallback: true // Necesario para que Netlify sirva index.html en rutas desconocidas
+  },
+
   devtools: { enabled: false },
-  
-  // SSR Configuration
-  ssr: true,
-  
-  // Modules
+
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxtjs/google-fonts',
     '@vueuse/nuxt'
   ],
-  
-  // CSS Configuration
+
   css: ['~/assets/css/main.css'],
-  
-  // Google Fonts
+
   googleFonts: {
     families: {
       Inter: [300, 400, 500, 600, 700],
     }
   },
-  
-  // App Configuration
+
   app: {
     head: {
       title: 'Zonora - Descubre Eventos Increíbles',
@@ -37,8 +41,7 @@ export default defineNuxtConfig({
       ]
     }
   },
-  
-  // Runtime Config
+
   runtimeConfig: {
     public: {
       appName: 'Zonora'
