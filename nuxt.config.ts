@@ -41,6 +41,7 @@ export default defineNuxtConfig({
   // Runtime Config
   runtimeConfig: {
     public: {
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.zonora.cl/api',
       appName: 'Zonora'
     }
   }

@@ -14,12 +14,12 @@
       <!-- Register Form -->
       <div class="bg-gray-800 rounded-lg p-8 shadow-lg">
         <form @submit.prevent="handleRegister" class="space-y-6">
-          <!-- Username -->
+          <!-- Nombre -->
           <div>
             <input
-              v-model="form.username"
+              v-model="form.name"
               type="text"
-              placeholder="Nombre de usuario"
+              placeholder="Nombre"
               class="input-field w-full"
               required
             />
@@ -50,7 +50,7 @@
           <!-- Confirm Password -->
           <div>
             <input
-              v-model="form.confirmPassword"
+              v-model="form.password_confirmation"
               type="password"
               placeholder="Confirmar contraseña"
               class="input-field w-full"
@@ -59,11 +59,16 @@
           </div>
 
           <!-- hCaptcha -->
+         <!--  <div id="hcaptcha-container" class="my-4"></div> -->
+
           <div>
-            <div class="bg-gray-700 rounded-lg p-4 text-center">
-              <div class="text-gray-400 text-sm">hCaptcha</div>
-              <div class="text-xs text-gray-500 mt-1">Verificación de seguridad</div>
-            </div>
+            <input
+              v-model="form.hCaptcha"
+              type="text"
+              placeholder="Token hCaptcha"
+              class="input-field w-full"
+              required
+            />
           </div>
 
           <!-- Register Button -->
@@ -111,44 +116,54 @@
 </template>
 
 <script setup lang="ts">
-// Layout configuration
+// Layout sin wrapper
 definePageMeta({
   layout: false
 });
 
-const { register } = useAuth();
-
+const isLoading = ref(false);
+const config = useRuntimeConfig()
 const form = reactive({
-  username: '',
+  name: '',
   email: '',
   password: '',
-  confirmPassword: '',
+  password_confirmation: '',
+  hCaptcha: '',
 });
 
-const isLoading = ref(false);
-
 const handleRegister = async () => {
-  if (form.password !== form.confirmPassword) {
+  if (form.password !== form.password_confirmation) {
     alert('Las contraseñas no coinciden');
     return;
   }
 
   isLoading.value = true;
   try {
-    await register({
-      email: form.email,
-      password: form.password,
-      username: form.username
-    });
-    // Redirigir o mostrar mensaje
-  } catch (error) {
-    console.error('Error al registrar:', error);
+  const { data, error } = await useFetch(`${config.public.apiBaseUrl}/register`, {
+  method: 'POST',
+  body: {
+    name: form.name,
+    email: form.email,
+    password: form.password,
+    password_confirmation: form.password_confirmation,
+    'h-captcha-response': form.hCaptcha
+  }
+});
+
+    if (error.value) {
+      alert('Error al registrar: ' + error.value.message);
+    } else {
+      alert('Cuenta creada con éxito');
+      navigateTo('/login');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Hubo un problema en el registro');
   } finally {
     isLoading.value = false;
   }
 };
 
-// SEO
 useHead({
   title: 'Registro - Zonora',
   meta: [

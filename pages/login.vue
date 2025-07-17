@@ -14,16 +14,6 @@
       <!-- Login Form -->
       <div class="bg-gray-800 rounded-lg p-8 shadow-lg">
         <form @submit.prevent="handleLogin" class="space-y-6">
-          <!-- Username -->
-          <div>
-            <input
-              v-model="form.username"
-              type="text"
-              placeholder="Usuario"
-              class="input-field w-full"
-              required
-            />
-          </div>
 
           <!-- Email -->
           <div>
@@ -36,19 +26,34 @@
             />
           </div>
 
-          <!-- hCaptcha -->
+          <!-- Password -->
           <div>
-            <div class="bg-gray-700 rounded-lg p-4 text-center">
-              <div class="text-gray-400 text-sm">hCaptcha</div>
-              <div class="text-xs text-gray-500 mt-1">Verificación de seguridad</div>
-            </div>
+            <input
+              v-model="form.password"
+              type="password"
+              placeholder="Contraseña"
+              class="input-field w-full"
+              required
+            />
+          </div>
+
+          <!-- hCaptcha -->
+       <!--   <div id="hcaptcha-container" class="my-4"></div> -->
+             <div>
+            <input
+              v-model="form.hCaptcha"
+              type="text"
+              placeholder="Token hCaptcha"
+              class="input-field w-full"
+              required
+            />
           </div>
 
           <!-- Login Button -->
           <button
             type="submit"
             class="btn-primary w-full"
-            :disabled="isLoading"
+            :disabled="isLoading || !form.hCaptcha"
           >
             <span v-if="isLoading">Iniciando sesión...</span>
             <span v-else>Iniciar Sesión</span>
@@ -89,40 +94,69 @@
 </template>
 
 <script setup lang="ts">
-// Layout configuration
-definePageMeta({
-  layout: false
-});
+declare global {
+  interface Window {
+    hcaptcha: any;
+  }
+}
+import { ref, reactive, onMounted } from 'vue'
+import { useAuth } from '~/composables/useAuth'
 
 const { login } = useAuth();
-
-const form = reactive({
-  username: '',
-  email: '',
-});
-
 const isLoading = ref(false);
 
+const form = reactive({
+  email: '',
+  password: '',
+  hCaptcha: '',
+});
+
+function loadHCaptchaScript(): Promise<void> {
+  return new Promise((resolve) => {
+    if (window.hcaptcha) return resolve()
+    const script = document.createElement('script')
+    script.src = 'https://js.hcaptcha.com/1/api.js'
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    document.head.appendChild(script)
+  })
+}
+
+function renderHCaptcha() {
+  window.hcaptcha.render('hcaptcha-container', {
+    sitekey: 'TU_SITE_KEY_DE_HCAPTCHA', // <-- Cambialo por tu sitekey real
+    callback: (token: string) => {
+      form.hCaptcha = token;
+    },
+    'expired-callback': () => {
+      form.hCaptcha = '';
+    }
+  });
+}
+
+onMounted(async () => {
+  await loadHCaptchaScript();
+  renderHCaptcha();
+})
+
 const handleLogin = async () => {
+  if (!form.hCaptcha) {
+    alert('Por favor completá el captcha');
+    return;
+  }
   isLoading.value = true;
-  
   try {
     await login({
       email: form.email,
-      password: 'password' // En un app real, sería form.password
+      password: form.password,
+      hcaptchaToken: form.hCaptcha
     });
   } catch (error) {
     console.error('Login error:', error);
+    alert('Error al iniciar sesión');
   } finally {
     isLoading.value = false;
   }
 };
-
-// SEO
-useHead({
-  title: 'Iniciar Sesión - Zonora',
-  meta: [
-    { name: 'description', content: 'Inicia sesión en Zonora para acceder a todas las funcionalidades' }
-  ]
-});
 </script>
