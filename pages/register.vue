@@ -15,61 +15,43 @@
       <div class="bg-gray-800 rounded-lg p-8 shadow-lg">
         <form @submit.prevent="handleRegister" class="space-y-6">
           <!-- Nombre -->
-          <div>
-            <input
-              v-model="form.name"
-              type="text"
-              placeholder="Nombre"
-              class="input-field w-full"
-              required
-            />
-          </div>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="Nombre"
+            class="input-field w-full"
+            required
+          />
 
           <!-- Email -->
-          <div>
-            <input
-              v-model="form.email"
-              type="email"
-              placeholder="Correo electrónico"
-              class="input-field w-full"
-              required
-            />
-          </div>
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="Correo electrónico"
+            class="input-field w-full"
+            required
+          />
 
           <!-- Password -->
-          <div>
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="Contraseña"
-              class="input-field w-full"
-              required
-            />
-          </div>
+          <input
+            v-model="form.password"
+            type="password"
+            placeholder="Contraseña"
+            class="input-field w-full"
+            required
+          />
 
           <!-- Confirm Password -->
-          <div>
-            <input
-              v-model="form.password_confirmation"
-              type="password"
-              placeholder="Confirmar contraseña"
-              class="input-field w-full"
-              required
-            />
-          </div>
+          <input
+            v-model="form.password_confirmation"
+            type="password"
+            placeholder="Confirmar contraseña"
+            class="input-field w-full"
+            required
+          />
 
           <!-- hCaptcha -->
-         <!--  <div id="hcaptcha-container" class="my-4"></div> -->
-
-          <div>
-            <input
-              v-model="form.hCaptcha"
-              type="text"
-              placeholder="Token hCaptcha"
-              class="input-field w-full"
-              required
-            />
-          </div>
+          <div id="hcaptcha-container" class="my-4"></div>
 
           <!-- Register Button -->
           <button
@@ -116,13 +98,13 @@
 </template>
 
 <script setup lang="ts">
-// Layout sin wrapper
 definePageMeta({
   layout: false
 });
 
 const isLoading = ref(false);
-const config = useRuntimeConfig()
+const config = useRuntimeConfig();
+
 const form = reactive({
   name: '',
   email: '',
@@ -137,18 +119,23 @@ const handleRegister = async () => {
     return;
   }
 
+  if (!form.hCaptcha) {
+    alert('Por favor completa el captcha.');
+    return;
+  }
+
   isLoading.value = true;
   try {
-  const { data, error } = await useFetch(`${config.public.apiBaseUrl}/register`, {
-  method: 'POST',
-  body: {
-    name: form.name,
-    email: form.email,
-    password: form.password,
-    password_confirmation: form.password_confirmation,
-    'h-captcha-response': form.hCaptcha
-  }
-});
+    const { data, error } = await useFetch(`${config.public.apiBaseUrl}/register`, {
+      method: 'POST',
+      body: {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        password_confirmation: form.password_confirmation,
+        'h-captcha-response': form.hCaptcha
+      }
+    });
 
     if (error.value) {
       alert('Error al registrar: ' + error.value.message);
@@ -163,6 +150,38 @@ const handleRegister = async () => {
     isLoading.value = false;
   }
 };
+
+// Carga dinámica del script y renderizado del hCaptcha
+onMounted(() => {
+  //const sitekey = config.public.hcaptchaSiteKey;
+
+  const renderCaptcha = () => {
+    // Si ya existe hcaptcha en window, renderizar
+    if (window.hcaptcha) {
+      window.hcaptcha.render('hcaptcha-container', {
+        sitekey: 'a19acdc8-2292-45d2-bc3e-c5644102f500',
+        callback: (token: string) => {
+          form.hCaptcha = token;
+        },
+        'expired-callback': () => {
+          form.hCaptcha = '';
+        }
+      });
+    }
+  };
+
+  // Si ya está cargado
+  if (window.hcaptcha) {
+    renderCaptcha();
+  } else {
+    const script = document.createElement('script');
+    script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = renderCaptcha;
+    document.head.appendChild(script);
+  }
+});
 
 useHead({
   title: 'Registro - Zonora',

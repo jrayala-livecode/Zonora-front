@@ -2,9 +2,26 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
-  
+ 
   // SSR Configuration
   ssr: true,
+  
+  // Page transitions
+  app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
+    head: {
+      title: 'Zonora - Descubre Eventos Increíbles',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { hid: 'description', name: 'description', content: 'Descubre y crea eventos increíbles en Zonora' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  },
   
   // Modules
   modules: [
@@ -23,26 +40,12 @@ export default defineNuxtConfig({
     }
   },
   
-  // App Configuration
-  app: {
-    head: {
-      title: 'Zonora - Descubre Eventos Increíbles',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'Descubre y crea eventos increíbles en Zonora' }
-      ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-      ]
-    }
-  },
-  
   // Runtime Config
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://api.zonora.cl/api',
-      appName: 'Zonora'
+      appName: 'Zonora',    
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL
+  
     }
   }
 })

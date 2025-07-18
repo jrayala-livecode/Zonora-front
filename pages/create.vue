@@ -110,8 +110,6 @@
 
               <!-- Category -->
               <!-- Category - Only Music for now -->
-             <input type="hidden" :value="form.category" name="category" />
-
 
               <!-- Submit Button -->
               <button
@@ -170,9 +168,13 @@ const createEventHandler = async () => {
   
   try {
     await createEvent(form);
+    const { showSuccess } = useModal();
+    showSuccess('¡Evento creado!', 'Tu evento ha sido creado exitosamente');
     await navigateTo('/events');
   } catch (error) {
     console.error('Error creating event:', error);
+    const { showError } = useModal();
+    showError('Error', 'No se pudo crear el evento. Inténtalo de nuevo.');
   } finally {
     isSubmitting.value = false;
   }

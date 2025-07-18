@@ -11,7 +11,7 @@
           Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <NuxtLink to="/events" class="btn-primary text-lg px-8 py-4">
+          <NuxtLink to="/events" class="btn-primary text-lg px-8 py-4 animate-pulse">
             Explorar Eventos
           </NuxtLink>
           <NuxtLink v-if="isAuthenticated" to="/create" class="btn-secondary text-lg px-8 py-4">
@@ -22,7 +22,7 @@
     </section>
 
     <!-- Featured Events -->
-    <section class="py-16 bg-gray-900">
+    <section class="py-16 bg-gray-900 animate-fade-in">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center mb-8">
           <h2 class="text-3xl font-bold text-white">Eventos Destacados</h2>
@@ -31,21 +31,21 @@
           </NuxtLink>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation">
           <NuxtLink
             v-for="event in featuredEvents"
             :key="event.id"
             :to="`/events/${event.id}`"
-            class="group"
+            class="group transform transition-all duration-300 hover:scale-105"
           >
-            <div class="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-750 transition-colors duration-200">
+            <div class="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-750 transition-all duration-300 hover:shadow-2xl">
               <img
                 :src="event.image"
                 :alt="event.title"
-                class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
               />
               <div class="p-6">
-                <h3 class="font-semibold text-white group-hover:text-orange-400 transition-colors duration-200 mb-2">
+                <h3 class="font-semibold text-white group-hover:text-orange-400 transition-colors duration-300 mb-2">
                   {{ event.title }}
                 </h3>
                 <p class="text-sm text-gray-400 mb-3">
@@ -54,7 +54,7 @@
                 <p class="text-gray-300 text-sm line-clamp-2">
                   {{ event.description }}
                 </p>
-                <div class="flex items-center mt-4 text-sm text-gray-400">
+                <div class="flex items-center mt-4 text-sm text-gray-400 transform group-hover:translate-x-2 transition-transform duration-300">
                   <MapPin class="w-4 h-4 mr-1" />
                   {{ event.location }}
                 </div>
@@ -94,13 +94,13 @@ const { isAuthenticated } = useAuth();
 
 const featuredEvents = computed(() => events.value.slice(0, 6));
 
- // Categories commented out - only music events for now
- const categories = [
-  { name: 'Música', icon: '🎵', count: events.value.length },
-  { name: 'Arte', icon: '🎨', count: 0 },
-  { name: 'Deportes', icon: '⚽', count: 0 },
- { name: 'Tecnología', icon: '💻', count: 0 },
-];
+// Categories commented out - only music events for now
+// const categories = [
+//   { name: 'Música', icon: '🎵', count: events.value.length },
+//   { name: 'Arte', icon: '🎨', count: 0 },
+//   { name: 'Deportes', icon: '⚽', count: 0 },
+//   { name: 'Tecnología', icon: '💻', count: 0 },
+// ];
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);

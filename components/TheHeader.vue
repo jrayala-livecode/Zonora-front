@@ -14,11 +14,11 @@
 
         <!-- Navigation -->
         <nav class="hidden md:flex space-x-8">
-          <NuxtLink to="/" class="nav-link">Inicio</NuxtLink>
-          <NuxtLink to="/events" class="nav-link">Eventos</NuxtLink>
-          <NuxtLink to="/explore" class="nav-link">Explorar</NuxtLink>
-          <NuxtLink v-if="isAuthenticated" to="/create" class="nav-link">Crear</NuxtLink>
-          <NuxtLink v-if="isAuthenticated" to="/my-events" class="nav-link">Mis Eventos</NuxtLink>
+          <NuxtLink to="/" class="nav-link transform hover:scale-110 transition-all duration-300">Inicio</NuxtLink>
+          <NuxtLink to="/events" class="nav-link transform hover:scale-110 transition-all duration-300">Eventos</NuxtLink>
+          <NuxtLink to="/explore" class="nav-link transform hover:scale-110 transition-all duration-300">Explorar</NuxtLink>
+          <NuxtLink v-if="isAuthenticated" to="/create" class="nav-link transform hover:scale-110 transition-all duration-300">Crear</NuxtLink>
+          <NuxtLink v-if="isAuthenticated" to="/my-events" class="nav-link transform hover:scale-110 transition-all duration-300">Mis Eventos</NuxtLink>
         </nav>
 
         <!-- Actions -->
@@ -62,9 +62,11 @@
               <NuxtLink to="/profile" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                 Perfil
               </NuxtLink>
-              <NuxtLink to="/settings" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+              <!--            <NuxtLink to="/settings" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                 Configuración
               </NuxtLink>
+              -->
+  
               <hr class="border-gray-700 my-1" />
               <button
                 @click="logout"

@@ -12,98 +12,120 @@
       </div>
 
       <!-- Login Form -->
-      <div class="bg-gray-800 rounded-lg p-8 shadow-lg">
-        <form @submit.prevent="handleLogin" class="space-y-6">
+      <transition name="fade" mode="out-in">
+        <div
+          v-if="!isLoggedIn"
+          :key="formKey"
+          class="bg-gray-800 rounded-lg p-8 shadow-lg transition-opacity duration-500"
+          :class="{ 'opacity-0 pointer-events-none': isFadingOut }"
+        >
+          <form @submit.prevent="handleLogin" class="space-y-6">
+            <!-- Email -->
+            <div>
+              <input
+                v-model="form.email"
+                type="email"
+                placeholder="Email"
+                class="input-field w-full"
+                required
+              />
+            </div>
 
-          <!-- Email -->
-          <div>
-            <input
-              v-model="form.email"
-              type="email"
-              placeholder="Email"
-              class="input-field w-full"
-              required
-            />
-          </div>
+            <!-- Password -->
+            <div>
+              <input
+                v-model="form.password"
+                type="password"
+                placeholder="Contraseña"
+                class="input-field w-full"
+                required
+              />
+            </div>
 
-          <!-- Password -->
-          <div>
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="Contraseña"
-              class="input-field w-full"
-              required
-            />
-          </div>
+            <!-- hCaptcha -->
+            <div id="hcaptcha-container" class="my-4"></div>
 
-          <!-- hCaptcha -->
-       <!--   <div id="hcaptcha-container" class="my-4"></div> -->
-             <div>
-            <input
-              v-model="form.hCaptcha"
-              type="text"
-              placeholder="Token hCaptcha"
-              class="input-field w-full"
-              required
-            />
-          </div>
+            <!-- Login Button -->
+            <button
+              type="submit"
+              class="btn-primary w-full"
+              :disabled="isLoading || !form.hCaptcha"
+            >
+              <span v-if="isLoading">Iniciando sesión...</span>
+              <span v-else>Iniciar Sesión</span>
+            </button>
 
-          <!-- Login Button -->
-          <button
-            type="submit"
-            class="btn-primary w-full"
-            :disabled="isLoading || !form.hCaptcha"
-          >
-            <span v-if="isLoading">Iniciando sesión...</span>
-            <span v-else>Iniciar Sesión</span>
-          </button>
+            <!-- Divider -->
+            <div class="text-center">
+              <span class="text-gray-400 text-sm">o</span>
+            </div>
 
-          <!-- Divider -->
-          <div class="text-center">
-            <span class="text-gray-400 text-sm">o</span>
-          </div>
+            <!-- Social Login -->
+            <button
+              type="button"
+              class="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              <span>Continuar con Google</span>
+            </button>
 
-          <!-- Social Login -->
-          <button
-            type="button"
-            class="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span>Continuar con Google</span>
-          </button>
-
-          <!-- Sign Up Link -->
-          <div class="text-center">
-            <p class="text-gray-400 text-sm">
-              ¿No tienes una cuenta?
-              <NuxtLink to="/register" class="text-orange-500 hover:text-orange-400">
-                Regístrate
-              </NuxtLink>
-            </p>
-          </div>
-        </form>
-      </div>
+            <!-- Sign Up Link -->
+            <div class="text-center">
+              <p class="text-gray-400 text-sm">
+                ¿No tienes una cuenta?
+                <NuxtLink to="/register" class="text-orange-500 hover:text-orange-400">
+                  Regístrate
+                </NuxtLink>
+              </p>
+            </div>
+          </form>
+        </div>
+      </transition>
     </div>
+
+    <!-- Modal de mensaje -->
+    <transition name="fade">
+      <div
+        v-if="modalMessage"
+        class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-70 h-screen flex items-center justify-center"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-sm shadow-lg text-center">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">Mensaje</h3>
+          <p class="text-gray-700 mb-4">{{ modalMessage }}</p>
+          <button @click="modalMessage = ''" class="btn-primary">Cerrar</button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
+
 <script setup lang="ts">
+definePageMeta({ layout: false });
+
+import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuth } from '~/composables/useAuth';
+
 declare global {
   interface Window {
     hcaptcha: any;
   }
 }
-import { ref, reactive, onMounted } from 'vue'
-import { useAuth } from '~/composables/useAuth'
 
+const router = useRouter();
 const { login } = useAuth();
+
 const isLoading = ref(false);
+const isFadingOut = ref(false);
+const isLoggedIn = ref(false);
+const formKey = ref(0);
+const modalMessage = ref('');
 
 const form = reactive({
   email: '',
@@ -113,50 +135,70 @@ const form = reactive({
 
 function loadHCaptchaScript(): Promise<void> {
   return new Promise((resolve) => {
-    if (window.hcaptcha) return resolve()
-    const script = document.createElement('script')
-    script.src = 'https://js.hcaptcha.com/1/api.js'
-    script.async = true
-    script.defer = true
-    script.onload = () => resolve()
-    document.head.appendChild(script)
-  })
+    if (window.hcaptcha) return resolve();
+    const script = document.createElement('script');
+    script.src = 'https://js.hcaptcha.com/1/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    document.head.appendChild(script);
+  });
 }
 
 function renderHCaptcha() {
   window.hcaptcha.render('hcaptcha-container', {
-    sitekey: 'TU_SITE_KEY_DE_HCAPTCHA', // <-- Cambialo por tu sitekey real
+    sitekey: 'a19acdc8-2292-45d2-bc3e-c5644102f500',
     callback: (token: string) => {
       form.hCaptcha = token;
     },
     'expired-callback': () => {
       form.hCaptcha = '';
-    }
+    },
   });
 }
 
 onMounted(async () => {
   await loadHCaptchaScript();
   renderHCaptcha();
-})
+});
 
 const handleLogin = async () => {
   if (!form.hCaptcha) {
-    alert('Por favor completá el captcha');
+    modalMessage.value = 'Por favor completá el captcha.';
     return;
   }
+
   isLoading.value = true;
   try {
-    await login({
-      email: form.email,
-      password: form.password,
-      hcaptchaToken: form.hCaptcha
-    });
+   await login({
+  email: form.email,
+  password: form.password,
+  hcaptchaToken: form.hCaptcha,
+});
+
+
+    // Fade out efecto y navegar
+    isFadingOut.value = true;
+    setTimeout(() => {
+      isLoggedIn.value = true;
+      router.push('/'); // cambia esto a tu ruta principal
+    }, 700);
   } catch (error) {
-    console.error('Login error:', error);
-    alert('Error al iniciar sesión');
+    modalMessage.value = 'Error al iniciar sesión. Verifica tus credenciales.';
+    console.error(error);
   } finally {
     isLoading.value = false;
   }
 };
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -1,13 +1,13 @@
 <template>
-  <div class="card hover:bg-gray-750 transition-colors duration-200 cursor-pointer group">
+  <div class="card hover:bg-gray-750 transition-all duration-300 cursor-pointer group transform hover:scale-105 hover:shadow-xl">
     <div class="flex space-x-4">
       <img
         :src="event.image"
         :alt="event.title"
-        class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+        class="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
       />
       <div class="flex-1 min-w-0">
-        <h3 class="font-semibold text-white group-hover:text-orange-400 transition-colors duration-200 truncate">
+        <h3 class="font-semibold text-white group-hover:text-orange-400 transition-colors duration-300 truncate">
           {{ event.title }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
@@ -16,7 +16,7 @@
         <p class="text-sm text-gray-300 mt-2 line-clamp-2">
           {{ event.description }}
         </p>
-        <div class="flex items-center mt-2 space-x-4">
+        <div class="flex items-center mt-2 space-x-4 transform group-hover:translate-x-2 transition-transform duration-300">
           <span class="flex items-center text-sm text-gray-400">
             <MapPin class="w-4 h-4 mr-1" />
             {{ event.location }}

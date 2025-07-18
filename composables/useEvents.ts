@@ -22,7 +22,7 @@ export const useEvents = () => {
       location: 'The Warehouse',
       address: '789 Industrial Ave, Los Angeles, CA',
       image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Music Festival',
+      category: 'Música',
       attendees: 2500
     },
     {
@@ -34,7 +34,7 @@ export const useEvents = () => {
       location: 'Club Central',
       address: 'Downtown LA',
       image: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Electronic'
+      category: 'Música'
     },
     {
       id: '3',
@@ -45,7 +45,7 @@ export const useEvents = () => {
       location: 'Outdoor Stage',
       address: 'Central Park',
       image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Concert'
+      category: 'Música'
     },
     {
       id: '4',
@@ -56,7 +56,7 @@ export const useEvents = () => {
       location: 'Intimate Venue',
       address: 'Arts District',
       image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Acoustic'
+      category: 'Música'
     },
     {
       id: '5',
@@ -67,7 +67,7 @@ export const useEvents = () => {
       location: 'Rock Venue',
       address: 'Music Row',
       image: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Rock'
+      category: 'Música'
     },
     {
       id: '6',
@@ -78,7 +78,7 @@ export const useEvents = () => {
       location: 'Jazz Club',
       address: 'Historic District',
       image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Jazz'
+      category: 'Música'
     },
     {
       id: '7',
@@ -89,7 +89,7 @@ export const useEvents = () => {
       location: 'Holiday Market',
       address: 'Main Square',
       image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Holiday'
+      category: 'Música'
     }
   ]);
 
