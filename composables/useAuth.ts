@@ -74,6 +74,7 @@ export const useAuth = () => {
 
 
  const loginWithGoogle = async (code: string) => {
+  try {
     const config = useRuntimeConfig();
 
     const response = await $fetch<{ access_token: string; user: any }>(
@@ -89,16 +90,38 @@ export const useAuth = () => {
       throw new Error('Error de autenticación');
     }
 
+    const loggedInUser = Array.isArray(response.user) ? response.user[0] : response.user;
+
+    // Guardar token en cookie
     token.value = response.access_token;
+
+    // Setear usuario en store global
     userStore.setToken(response.access_token);
     userStore.setUser({
-      id: response.user.id,
-      name: response.user.name,
-      email: response.user.email,
-      avatar: response.user.avatar_url ?? '',
-      joinedAt: response.user.created_at ?? '',
+      id: loggedInUser.id,
+      name: loggedInUser.name,
+      email: loggedInUser.email,
+      avatar: loggedInUser.avatar_url ?? '',
+      joinedAt: loggedInUser.created_at ?? '',
     });
-  };
+
+    // Setear también en variable local (opcional pero recomendable si usás `useState`)
+    user.value = {
+      id: loggedInUser.id,
+      name: loggedInUser.name,
+      email: loggedInUser.email,
+      avatar: loggedInUser.avatar_url ?? '',
+      joinedAt: loggedInUser.created_at ?? '',
+    };
+
+    // Redirigir al home
+    await navigateTo('/');
+  } catch (error: any) {
+    console.error('Error en login con Google:', error);
+    throw error;
+  }
+};
+
 
   const logout = () => {
     token.value = null;
