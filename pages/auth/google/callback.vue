@@ -16,11 +16,11 @@ onMounted(async () => {
     return router.push('/login');
   }
 
-  // Guardar el token en cookie
+  // Guardar token en cookie
   useCookie('token', { maxAge: 60 * 60 }).value = token;
 
-  // Pedir los datos reales del usuario al backend
   try {
+    // Consultar datos del usuario desde el backend
     const user = await $fetch('/me', {
       baseURL: config.public.apiBaseUrl,
       headers: {
@@ -30,9 +30,10 @@ onMounted(async () => {
 
     userStore.setUser(user);
     userStore.setToken(token);
+
     return router.push('/');
   } catch (e) {
-    console.error('Error al obtener datos de usuario desde API:', e);
+    console.error('Error al obtener datos del usuario:', e);
     return router.push('/login');
   }
 });
