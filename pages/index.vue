@@ -30,7 +30,10 @@
             Ver todos →
           </NuxtLink>
         </div>
-        
+        <!-- Loader -->
+    <div v-if="isLoading" class="flex justify-center items-center py-20">
+      <div class="text-orange-400 text-lg animate-pulse">Cargando eventos...</div>
+    </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation">
           <NuxtLink
             v-for="event in featuredEvents"
@@ -87,20 +90,17 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, computed } from 'vue';
 import { MapPin } from 'lucide-vue-next';
 
-const { events } = useEvents();
+const { events, fetchEventsFromApi, isLoading } = useEvents();
 const { isAuthenticated } = useAuth();
 
-const featuredEvents = computed(() => events.value.slice(0, 6));
+onMounted(() => {
+  fetchEventsFromApi();
+});
 
-// Categories commented out - only music events for now
-// const categories = [
-//   { name: 'Música', icon: '🎵', count: events.value.length },
-//   { name: 'Arte', icon: '🎨', count: 0 },
-//   { name: 'Deportes', icon: '⚽', count: 0 },
-//   { name: 'Tecnología', icon: '💻', count: 0 },
-// ];
+const featuredEvents = computed(() => events.value.slice(0, 6));
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -110,11 +110,14 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// SEO
 useHead({
   title: 'Zonora - Descubre Eventos Increíbles',
   meta: [
-    { name: 'description', content: 'Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.' }
-  ]
+    {
+      name: 'description',
+      content:
+        'Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.',
+    },
+  ],
 });
 </script>

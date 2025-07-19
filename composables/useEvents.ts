@@ -1,3 +1,5 @@
+import { ref, computed, readonly } from 'vue';
+
 export interface Event {
   id: string;
   title: string;
@@ -11,103 +13,82 @@ export interface Event {
   attendees?: number;
 }
 
-export const useEvents = () => {
-  const events = ref<Event[]>([
-    {
-      id: '1',
-      title: 'Rhythmic Pulse Festival: A Night of Electronic Music',
-      description: 'Join us for an electrifying night at the Rhythmic Pulse Festival! Featuring a lineup of renowned DJs, state-of-the-art sound systems, and mesmerizing light shows, this event promises an unforgettable experience for all electronic music enthusiasts.',
-      date: '2024-08-10',
-      time: '8:00 PM - 3:00 AM',
-      location: 'The Warehouse',
-      address: '789 Industrial Ave, Los Angeles, CA',
-      image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música',
-      attendees: 2500
-    },
-    {
-      id: '2',
-      title: 'Electronic Beats Festival',
-      description: 'Una noche increíble de música electrónica con los mejores DJs internacionales.',
-      date: '2024-07-15',
-      time: '7:00 PM',
-      location: 'Club Central',
-      address: 'Downtown LA',
-      image: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    },
-    {
-      id: '3',
-      title: 'Summer Rhythms Concert',
-      description: 'Concierto de verano con artistas locales e internacionales.',
-      date: '2024-08-05',
-      time: '6:00 PM',
-      location: 'Outdoor Stage',
-      address: 'Central Park',
-      image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    },
-    {
-      id: '4',
-      title: 'Acoustic Nights Showcase',
-      description: 'Una noche íntima con música acústica y talentos emergentes.',
-      date: '2024-09-12',
-      time: '8:00 PM',
-      location: 'Intimate Venue',
-      address: 'Arts District',
-      image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    },
-    {
-      id: '5',
-      title: 'Indie Rock Marathon',
-      description: 'Maratón de rock indie con bandas locales.',
-      date: '2024-10-19',
-      time: '9:00 AM',
-      location: 'Rock Venue',
-      address: 'Music Row',
-      image: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    },
-    {
-      id: '6',
-      title: 'Jazz Fusion Fair',
-      description: 'Feria de jazz fusion con músicos reconocidos.',
-      date: '2024-11-22',
-      time: '5:00 PM',
-      location: 'Jazz Club',
-      address: 'Historic District',
-      image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    },
-    {
-      id: '7',
-      title: 'Holiday Harmonies Market',
-      description: 'Mercado navideño con música en vivo y artesanías.',
-      date: '2024-12-13',
-      time: '10:00 AM',
-      location: 'Holiday Market',
-      address: 'Main Square',
-      image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
-      category: 'Música'
-    }
-  ]);
+function mapApiEventToEvent(apiEvent: any): Event {
+  const dateObj = new Date(apiEvent.date);
+  const date = dateObj.toISOString().split('T')[0];
+  const time = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  
 
+  let location = '';
+  if (apiEvent.venue?.name) {
+    location = apiEvent.venue.name;
+  } else if (apiEvent.latitude && apiEvent.longitude) {
+    location = `Lat: ${apiEvent.latitude}, Lng: ${apiEvent.longitude}`;
+  } else {
+    location = 'Ubicación no disponible';
+  }
+
+  const address = apiEvent.venue?.address || '';
+  
+  let category = '';
+  if (Array.isArray(apiEvent.hashtags)) {
+    category = apiEvent.hashtags[0]?.replace(/^#/, '') || '';
+  } else if (typeof apiEvent.hashtags === 'string') {
+    category = apiEvent.hashtags.replace(/^#/, '').split(' ')[0];
+  }
+
+  const image = apiEvent.image_url || '';
+
+  return {
+    id: apiEvent.id.toString(),
+    title: apiEvent.name || 'Evento sin título',
+    description: apiEvent.description || '',
+    date,
+    time,
+    location,
+    address,
+    image,
+    category,
+    attendees: undefined
+  };
+}
+
+export const useEvents = () => {
+  const events = ref<Event[]>([]);
   const searchQuery = ref('');
   const selectedLocation = ref('');
+  const config = useRuntimeConfig();
+  const isLoading = ref(false);
+
+  const fetchEventsFromApi = async () => {
+      isLoading.value = true;
+    try {
+      const res = await fetch(`${config.public.apiBaseUrl}/events`);
+      if (!res.ok) throw new Error('Error fetching events');
+      
+      const json = await res.json();
+      const apiEvents = json.data.data; // importante: .data.data
+      events.value = apiEvents.map(mapApiEventToEvent);
+    } catch (error) {
+      console.error('Error al obtener eventos:', error);
+      events.value = [];
+      
+    }
+      isLoading.value = false;
+  };
 
   const filteredEvents = computed(() => {
     let filtered = events.value;
 
     if (searchQuery.value) {
-      filtered = filtered.filter(event => 
+      filtered = filtered.filter(event =>
         event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
     }
 
     if (selectedLocation.value) {
-      filtered = filtered.filter(event => 
+      filtered = filtered.filter(event =>
         event.location.toLowerCase().includes(selectedLocation.value.toLowerCase())
       );
     }
@@ -119,22 +100,13 @@ export const useEvents = () => {
     return events.value.find(event => event.id === id);
   };
 
-  const createEvent = async (eventData: Omit<Event, 'id'>) => {
-    const newEvent: Event = {
-      ...eventData,
-      id: Date.now().toString()
-    };
-    
-    events.value.push(newEvent);
-    return newEvent;
-  };
-
   return {
     events: readonly(events),
+    fetchEventsFromApi,
     filteredEvents,
     searchQuery,
     selectedLocation,
     getEventById,
-    createEvent
+    isLoading
   };
 };
