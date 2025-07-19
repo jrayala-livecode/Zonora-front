@@ -21,5 +21,8 @@
     "pinia": "^3.0.3",
     "vue-hcaptcha": "^0.1.1",
     "vue-leaflet": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.20"
   }
 }

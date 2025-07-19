@@ -73,7 +73,7 @@ export const useAuth = () => {
 };
 
 
- const loginWithGoogle = async (code: string) => {
+const loginWithGoogle = async (code: string) => {
   try {
     const config = useRuntimeConfig();
 
@@ -86,41 +86,49 @@ export const useAuth = () => {
       }
     );
 
-    if (!response.user || !response.access_token) {
+    if (!response.access_token) {
       throw new Error('Error de autenticación');
     }
-
-    const loggedInUser = Array.isArray(response.user) ? response.user[0] : response.user;
 
     // Guardar token en cookie
     token.value = response.access_token;
 
-    // Setear usuario en store global
+    // Si la respuesta user no tiene avatar o datos completos,
+    // hacemos fetch a /me para obtenerlos
+    let fullUser = response.user;
+    if (!fullUser?.avatar_url) {
+      fullUser = await $fetch('/me', {
+        baseURL: config.public.apiBaseUrl,
+        headers: {
+          Authorization: `Bearer ${response.access_token}`,
+        },
+      });
+    }
+
     userStore.setToken(response.access_token);
     userStore.setUser({
-      id: loggedInUser.id,
-      name: loggedInUser.name,
-      email: loggedInUser.email,
-      avatar: loggedInUser.avatar_url ?? '',
-      joinedAt: loggedInUser.created_at ?? '',
+      id: fullUser.id,
+      name: fullUser.name,
+      email: fullUser.email,
+      avatar: fullUser.avatar_url ?? '',
+      joinedAt: fullUser.created_at ?? '',
     });
 
-    // Setear también en variable local (opcional pero recomendable si usás `useState`)
     user.value = {
-      id: loggedInUser.id,
-      name: loggedInUser.name,
-      email: loggedInUser.email,
-      avatar: loggedInUser.avatar_url ?? '',
-      joinedAt: loggedInUser.created_at ?? '',
+      id: fullUser.id,
+      name: fullUser.name,
+      email: fullUser.email,
+      avatar: fullUser.avatar_url ?? '',
+      joinedAt: fullUser.created_at ?? '',
     };
 
-    // Redirigir al home
     await navigateTo('/');
   } catch (error: any) {
     console.error('Error en login con Google:', error);
     throw error;
   }
 };
+
 
 
   const logout = () => {
