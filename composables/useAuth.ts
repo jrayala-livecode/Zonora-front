@@ -54,38 +54,33 @@ export const useAuth = () => {
   };
 
  const loginWithGoogle = async (code: string) => {
-  try {
+    const config = useRuntimeConfig();
+
     const response = await $fetch<{ access_token: string; user: any }>(
       '/auth/google/callback',
       {
-        baseURL: apiBaseUrl,
+        baseURL: config.public.apiBaseUrl,
         method: 'POST',
         body: { code },
       }
     );
 
     if (!response.user || !response.access_token) {
-      throw new Error("Respuesta incompleta del servidor");
+      throw new Error('Error de autenticación');
     }
 
-    const loggedInUser = Array.isArray(response.user) ? response.user[0] : response.user;
-
     user.value = {
-      id: loggedInUser.id,
-      name: loggedInUser.name,
-      email: loggedInUser.email,
-      avatar: loggedInUser.avatar_url ?? '',
-      joinedAt: loggedInUser.created_at ?? '',
+      id: response.user.id,
+      name: response.user.name,
+      email: response.user.email,
+      avatar: response.user.avatar_url ?? '',
+      joinedAt: response.user.created_at ?? '',
     };
 
-    token.value = response.access_token; 
+    token.value = response.access_token;
+  };
 
-    await navigateTo('/');
-  } catch (error: any) {
-    console.error('Error en login con Google:', error);
-    throw createError({ statusCode: 500, statusMessage: 'Fallo al autenticar con Google' });
-  }
-};
+  
 
   const logout = () => {
     user.value = null;
