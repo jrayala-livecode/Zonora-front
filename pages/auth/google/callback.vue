@@ -25,7 +25,7 @@ onMounted(async () => {
       const user = JSON.parse(decodeURIComponent(userParam));
       userStore.setUser(user);
       userStore.setToken(token);
-      return router.push('/dashboard');
+      return router.push('/');
     } catch (e) {
       console.error('Error al parsear usuario:', e);
     }
