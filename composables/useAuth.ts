@@ -1,7 +1,12 @@
+import { useCookie, useRuntimeConfig } from '#app';
+import { useUserStore } from '~/store/user';
+
+
 export const useAuth = () => {
   const config = useRuntimeConfig();
   const apiBaseUrl = config.public.apiBaseUrl as string;
   const token = useCookie('token');
+  const userStore = useUserStore();
   const user = useState('auth.user', () => null as {
     id: number;
     name: string;
@@ -10,7 +15,7 @@ export const useAuth = () => {
     joinedAt: string;
   } | null);
 
-  const isAuthenticated = computed(() => !!user.value);
+ const isAuthenticated = computed(() => !!userStore.user && !!token.value);;
 
   const login = async (credentials: { email: string; password: string; hcaptchaToken?: string }) => {
     try {
@@ -69,21 +74,21 @@ export const useAuth = () => {
       throw new Error('Error de autenticación');
     }
 
-    user.value = {
+    token.value = response.access_token;
+    userStore.setToken(response.access_token);
+    userStore.setUser({
       id: response.user.id,
       name: response.user.name,
       email: response.user.email,
       avatar: response.user.avatar_url ?? '',
       joinedAt: response.user.created_at ?? '',
-    };
-
-    token.value = response.access_token;
+    });
   };
 
-  
-
   const logout = () => {
-    user.value = null;
+    token.value = null;
+    userStore.setUser(null);
+    userStore.setToken('');
     navigateTo('/login');
   };
 
@@ -123,10 +128,10 @@ export const useAuth = () => {
   };
 
   return {
-    user: readonly(user),
+    user: computed(() => userStore.user),
     isAuthenticated,
     login,
-    loginWithGoogle, // 👈 lo exportamos también
+    loginWithGoogle, 
     logout,
     register
   };

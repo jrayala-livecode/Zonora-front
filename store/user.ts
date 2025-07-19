@@ -1,27 +1,25 @@
 
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
-export const useUserStore = defineStore('user', {
+interface User {
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as null | {
-      id: number
-      name: string
-      email: string
-      avatar?: string
-      joinedAt?: string
-    },
-    token: null as null | string
+    user: null as User | null,
+    isAuthenticated: false,
   }),
   actions: {
-    setUser(user: any) {
-      this.user = user
+    setUser(user: User) {
+      this.user = user;
+      this.isAuthenticated = true;
     },
-    setToken(token: string) {
-      this.token = token
+    clearUser() {
+      this.user = null;
+      this.isAuthenticated = false;
     },
-    logout() {
-      this.user = null
-      this.token = null
-    }
-  }
-})
+  },
+});
