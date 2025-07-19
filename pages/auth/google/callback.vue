@@ -16,11 +16,23 @@ onMounted(async () => {
     return router.push('/login');
   }
 
-  // Guardar token en cookie
   useCookie('token', { maxAge: 60 * 60 }).value = token;
 
+  const userParam = route.query.user as string | undefined;
+
+  if (userParam) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userParam));
+      userStore.setUser(user);
+      userStore.setToken(token);
+      return router.push('/');
+    } catch (e) {
+      console.error('Error al parsear usuario:', e);
+    }
+  }
+
+  // Si no vino user en el query param, pedilo al backend con el token
   try {
-    // Consultar datos del usuario desde el backend
     const user = await $fetch('/me', {
       baseURL: config.public.apiBaseUrl,
       headers: {
@@ -30,14 +42,14 @@ onMounted(async () => {
 
     userStore.setUser(user);
     userStore.setToken(token);
-
     return router.push('/');
   } catch (e) {
-    console.error('Error al obtener datos del usuario:', e);
+    console.error('Error al obtener datos de usuario desde API:', e);
     return router.push('/login');
   }
 });
 </script>
+
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-900 text-white">
