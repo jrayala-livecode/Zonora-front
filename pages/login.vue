@@ -138,6 +138,7 @@ const redirectToGoogleLogin = async () => {
   try {
     const response = await fetch(`${config.public.apiBaseUrl}/auth/google`);
     const data = await response.json();
+    console.log('Redirección a Google:', data);
     if (data.redirect_url) {
       window.location.href = data.redirect_url; // redirige a la URL que el backend devolvió
     } else {
