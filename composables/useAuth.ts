@@ -72,8 +72,8 @@ export const useAuth = () => {
   }
 };
 
-/*
-const loginWithGoogle = async (code: string) => {
+
+ const loginWithGoogle = async (code: string) => {
   try {
     const config = useRuntimeConfig();
 
@@ -128,7 +128,7 @@ const loginWithGoogle = async (code: string) => {
     throw error;
   }
 };
-*/
+
 
 
   const logout = () => {
@@ -177,7 +177,7 @@ const loginWithGoogle = async (code: string) => {
     user: computed(() => userStore.user),
     isAuthenticated,
     login,
-  //  loginWithGoogle, 
+    loginWithGoogle, 
     logout,
     register
   };
