@@ -85,7 +85,7 @@ const loginWithGoogle = async (code: string) => {
         body: { code },
       }
     );
-
+   console.log('Respuesta de login con Google:', response);
     if (!response.access_token) {
       throw new Error('Error de autenticación');
     }
