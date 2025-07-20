@@ -85,7 +85,7 @@ export const useAuth = () => {
         body: { code },
       }
     );
-   console.log('Respuesta de login con Google:', response);
+   console.log('Respuesta de login con Google, pude entrar:', response);
     if (!response.access_token) {
       throw new Error('Error de autenticación');
     }
