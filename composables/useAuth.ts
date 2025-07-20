@@ -72,7 +72,7 @@ export const useAuth = () => {
   }
 };
 
-
+/*
 const loginWithGoogle = async (code: string) => {
   try {
     const config = useRuntimeConfig();
@@ -128,7 +128,7 @@ const loginWithGoogle = async (code: string) => {
     throw error;
   }
 };
-
+*/
 
 
   const logout = () => {
