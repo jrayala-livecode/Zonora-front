@@ -39,6 +39,7 @@ onMounted(async () => {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log('soy user', user)
 
     userStore.setUser(user);
     userStore.setToken(token);
