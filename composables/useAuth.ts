@@ -177,7 +177,7 @@ const loginWithGoogle = async (code: string) => {
     user: computed(() => userStore.user),
     isAuthenticated,
     login,
-    loginWithGoogle, 
+  //  loginWithGoogle, 
     logout,
     register
   };
