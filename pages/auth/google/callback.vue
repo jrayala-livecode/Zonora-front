@@ -12,7 +12,7 @@ const token = useCookie('token');
 
 onMounted(async () => {
   const tokenFromQuery = route.query.token as string | undefined;
-
+ console.log('Query params completos del callback:', route.query);
   if (!tokenFromQuery) {
     console.error('Token no proporcionado');
     return router.push('/login');
@@ -29,7 +29,7 @@ onMounted(async () => {
         id: user.id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar ?? '',
+        avatar_url: user.avatar ?? '',
         joinedAt: user.joinedAt ?? '',
       });
       userStore.setToken(tokenFromQuery);
