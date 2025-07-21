@@ -12,7 +12,8 @@ const token = useCookie('token');
 
 onMounted(async () => {
   const tokenFromQuery = route.query.token as string | undefined;
- console.log('Query params completos del callback:', route.query);
+  console.log('Query params completos del callback:', route.query);
+
   if (!tokenFromQuery) {
     console.error('Token no proporcionado');
     return router.push('/login');
@@ -29,7 +30,7 @@ onMounted(async () => {
         id: user.id,
         name: user.name,
         email: user.email,
-        avatar_url: user.avatar ?? '',
+        avatar: user.avatar_url ?? '',
         joinedAt: user.joinedAt ?? '',
       });
       userStore.setToken(tokenFromQuery);
@@ -50,7 +51,7 @@ onMounted(async () => {
       id: user.id,
       name: user.name,
       email: user.email,
-      avatar_url: user.avatar ?? '',
+      avatar: user.avatar_url ?? '',
       joinedAt: user.joinedAt ?? '',
     });
     userStore.setToken(tokenFromQuery);
@@ -60,6 +61,7 @@ onMounted(async () => {
     return router.push('/login');
   }
 });
+
 </script>
 
 <template>
