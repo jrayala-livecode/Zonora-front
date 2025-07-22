@@ -58,21 +58,21 @@ let marker: L.Marker | null = null;
 
 onMounted(() => {
   // Detectar ubicación inicial
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        initializeMap(latitude, longitude);
-      },
-      () => {
-        // Si falla GPS, usar Santiago de Chile
-        initializeMap(-33.4489, -70.6693);
-      }
-    );
-  } else {
-    // Si no hay geolocalización, usar Santiago de Chile
-    initializeMap(-33.4489, -70.6693);
-  }
+  // Ya no se necesita
+// if (navigator.geolocation) {
+//   navigator.geolocation.getCurrentPosition(
+//     (position) => {
+//       const { latitude, longitude } = position.coords;
+//       initializeMap(latitude, longitude);
+//     },
+//     () => {
+//       initializeMap(-33.4489, -70.6693);
+//     }
+//   );
+// } else {
+//   initializeMap(-33.4489, -70.6693);
+// }
+initializeMap(-33.4489, -70.6693);
 });
 
 function initializeMap(lat: number, lng: number) {
