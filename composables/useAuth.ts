@@ -14,7 +14,7 @@ export const useAuth = () => {
     avatar?: string;
     joinedAt: string;
   } | null);
-
+const isLoading = ref(true);
  const isAuthenticated = computed(() => !!userStore.user && !!token.value);;
 
  const login = async (credentials: { email: string; password: string; hcaptchaToken?: string }) => {
@@ -121,7 +121,7 @@ export const useAuth = () => {
       avatar: fullUser.avatar_url ?? '',
       joinedAt: fullUser.created_at ?? '',
     };
-
+   isLoading.value = false;
     await navigateTo('/');
   } catch (error: any) {
     console.error('Error en login con Google:', error);
@@ -177,6 +177,7 @@ export const useAuth = () => {
     user: computed(() => userStore.user),
     isAuthenticated,
     login,
+    isLoading,
     loginWithGoogle, 
     logout,
     register

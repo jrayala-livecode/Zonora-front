@@ -302,9 +302,18 @@ const createEventHandler = async () => {
     formData.append('longitude', form.longitude?.toString() || '');
     formData.append('hidden_location', form.hidden_location ? '1' : '0');
     formData.append('reveal_location_at', form.reveal_location_at || '');
-    formData.append('hashtags', form.hashtags);
-    formData.append('information_links', form.information_links);
-    formData.append('publish_date', form.publish_date || '');
+  //  formData.append('hashtags', form.hashtags);
+    form.hashtags
+  .split(' ')
+  .filter(tag => tag.trim() !== '')
+  .forEach(tag => formData.append('hashtags[]', tag));
+
+form.information_links
+  .split(',')
+  .map(link => link.trim())
+  .filter(link => link !== '')
+  .forEach(link => formData.append('information_links[]', link));
+
   //  formData.append('venue_id', form.venue_id ? form.venue_id.toString() : '');
     formData.append('status_id', form.status_id.toString());
     formData.append('commune_id', form.commune_id ? form.commune_id.toString() : '');
