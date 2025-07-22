@@ -31,7 +31,7 @@
 
     <!-- Coordenadas -->
     <div
-      v-if="selectedLat && selectedLng"
+      v-if="selectedLat !== null && selectedLng !== null"
       class="absolute bottom-2 right-2 bg-white text-black text-xs px-2 py-1 rounded shadow"
     >
       📍 {{ selectedLat.toFixed(5) }}, {{ selectedLng.toFixed(5) }}
@@ -40,8 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-
+import { ref, onMounted, onBeforeUnmount, watch, defineProps, defineEmits } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -49,7 +48,6 @@ const props = defineProps<{
   modelValue: { lat: number; lng: number } | null;
 }>();
 const emit = defineEmits(['update:modelValue']);
-
 
 const selectedLat = ref<number | null>(props.modelValue?.lat ?? null);
 const selectedLng = ref<number | null>(props.modelValue?.lng ?? null);
@@ -59,23 +57,8 @@ let map: L.Map;
 let marker: L.Marker | null = null;
 
 onMounted(() => {
-  // Detectar ubicación inicial
-  // Ya no se necesita
-// if (navigator.geolocation) {
-//   navigator.geolocation.getCurrentPosition(
-//     (position) => {
-//       const { latitude, longitude } = position.coords;
-//       initializeMap(latitude, longitude);
-//     },
-//     () => {
-//       initializeMap(-33.4489, -70.6693);
-//     }
-//   );
-// } else {
-//   initializeMap(-33.4489, -70.6693);
-// }
-if (typeof window === 'undefined') return;
-initializeMap(-33.4489, -70.6693);
+  if (typeof window === 'undefined') return;
+  initializeMap(props.modelValue?.lat ?? -33.4489, props.modelValue?.lng ?? -70.6693);
 });
 
 function initializeMap(lat: number, lng: number) {
@@ -105,6 +88,9 @@ function onMarkerDrag(e: L.LeafletEvent) {
 }
 
 function setLocation(lat: number, lng: number) {
+  // Evitar actualizar si no cambió para evitar loop infinito
+  if (lat === selectedLat.value && lng === selectedLng.value) return;
+
   selectedLat.value = lat;
   selectedLng.value = lng;
 
@@ -147,7 +133,10 @@ function handleFirstSuggestion() {
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (newVal) {
+    if (
+      newVal &&
+      (newVal.lat !== selectedLat.value || newVal.lng !== selectedLng.value)
+    ) {
       setLocation(newVal.lat, newVal.lng);
     }
   }
