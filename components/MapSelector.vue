@@ -72,6 +72,7 @@ onMounted(() => {
 // } else {
 //   initializeMap(-33.4489, -70.6693);
 // }
+if (typeof window === 'undefined') return;
 initializeMap(-33.4489, -70.6693);
 });
 

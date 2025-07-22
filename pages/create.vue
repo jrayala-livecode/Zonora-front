@@ -193,6 +193,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  ssr: false
+});
+
 import MapSelector from '~/components/MapSelector.vue';
 import { Upload, X, Calendar } from 'lucide-vue-next';
 import { reactive, ref, watch } from 'vue';
