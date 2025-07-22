@@ -49,8 +49,8 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(['update:modelValue']);
 
-const selectedLat = ref<number | null>(props.modelValue?.lat ?? null);
-const selectedLng = ref<number | null>(props.modelValue?.lng ?? null);
+const selectedLat = ref<number | null>(null);
+const selectedLng = ref<number | null>(null);
 const searchQuery = ref('');
 const suggestions = ref<any[]>([]);
 let map: L.Map;
@@ -58,7 +58,25 @@ let marker: L.Marker | null = null;
 
 onMounted(() => {
   if (typeof window === 'undefined') return;
-  initializeMap(props.modelValue?.lat ?? -33.4489, props.modelValue?.lng ?? -70.6693);
+
+  // Usar ubicación del usuario si es posible
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        initializeMap(position.coords.latitude, position.coords.longitude);
+      },
+      () => {
+        // Si falla la geolocalización, usar ubicación por defecto o props
+        const lat = props.modelValue?.lat ?? -33.4489;
+        const lng = props.modelValue?.lng ?? -70.6693;
+        initializeMap(lat, lng);
+      }
+    );
+  } else {
+    const lat = props.modelValue?.lat ?? -33.4489;
+    const lng = props.modelValue?.lng ?? -70.6693;
+    initializeMap(lat, lng);
+  }
 });
 
 function initializeMap(lat: number, lng: number) {
@@ -88,7 +106,6 @@ function onMarkerDrag(e: L.LeafletEvent) {
 }
 
 function setLocation(lat: number, lng: number) {
-  // Evitar actualizar si no cambió para evitar loop infinito
   if (lat === selectedLat.value && lng === selectedLng.value) return;
 
   selectedLat.value = lat;
