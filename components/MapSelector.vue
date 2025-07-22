@@ -40,7 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, defineEmits, defineProps } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -48,6 +49,7 @@ const props = defineProps<{
   modelValue: { lat: number; lng: number } | null;
 }>();
 const emit = defineEmits(['update:modelValue']);
+
 
 const selectedLat = ref<number | null>(props.modelValue?.lat ?? null);
 const selectedLng = ref<number | null>(props.modelValue?.lng ?? null);
