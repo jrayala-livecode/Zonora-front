@@ -43,7 +43,7 @@
           >
             <div class="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-750 transition-all duration-300 hover:shadow-2xl">
               <img
-                :src="event.image"
+                :src="event.image_url"
                 :alt="event.title"
                 class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
               />
