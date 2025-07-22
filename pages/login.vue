@@ -1,4 +1,5 @@
-<template>
+<template  v-if="!user">
+ 
   <div class="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <!-- Logo -->
@@ -14,7 +15,7 @@
       <!-- Login Form -->
       <transition name="fade" mode="out-in">
         <div
-          v-if="!isLoggedIn"
+         
           :key="formKey"
           class="bg-gray-800 rounded-lg p-8 shadow-lg transition-opacity duration-500"
           :class="{ 'opacity-0 pointer-events-none': isFadingOut }"
@@ -118,9 +119,8 @@ declare global {
     hcaptcha: any;
   }
 }
-
+const { login, user } = useAuth();
 const router = useRouter();
-const { login } = useAuth();
 const config = useRuntimeConfig();
 const isLoading = ref(false);
 const isFadingOut = ref(false);
@@ -179,6 +179,9 @@ function renderHCaptcha() {
 onMounted(async () => {
   await loadHCaptchaScript();
   renderHCaptcha();
+  if (user.value) {
+    router.push('/');
+  }
 });
 
 const handleLogin = async () => {
@@ -189,18 +192,27 @@ const handleLogin = async () => {
 
   isLoading.value = true;
   try {
-   await login({
-  email: form.email,
-  password: form.password,
-  hcaptchaToken: form.hCaptcha,
-});
+    await login({
+      email: form.email,
+      password: form.password,
+      hcaptchaToken: form.hCaptcha,
+    });
 
+    // Limpio el formulario al loguearse exitosamente
+    form.email = '';
+    form.password = '';
+    form.hCaptcha = '';
 
-    // Fade out efecto y navegar
+    // Reseteo el captcha si existe la función
+    if (window.hcaptcha && window.hcaptcha.reset) {
+      window.hcaptcha.reset();
+    }
+
+    // Fade out y redirijo
     isFadingOut.value = true;
     setTimeout(() => {
       isLoggedIn.value = true;
-      router.push('/'); // cambia esto a tu ruta principal
+      router.push('/'); // o la ruta que uses para la home
     }, 700);
   } catch (error) {
     modalMessage.value = 'Error al iniciar sesión. Verifica tus credenciales.';
@@ -209,6 +221,8 @@ const handleLogin = async () => {
     isLoading.value = false;
   }
 };
+
+
 </script>
 
 <style scoped>

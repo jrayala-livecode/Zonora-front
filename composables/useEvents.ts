@@ -2,21 +2,31 @@ import { ref, computed, readonly } from 'vue';
 import { useRuntimeConfig } from '#app';
 import { useUserStore } from '~/store/user'; // importa tu store
 
+export interface Organizer {
+  id: string;
+  name: string;
+  member_since: number;
+  avatar_url: string;
+}
+
 export interface Event {
   id: string;
   title: string;
   description: string;
   date: string;
-  time: string;
+  time?: string;
   location: string;
-  address: string;
+  address?: string;
   image_url: string;
-  category: string;
+  category?: string;
   attendees?: number;
-  venue_id?: number;
-  lat?: number | null;
-  lng?: number | null;
+  lat?: number;
+  lng?: number;
+  organizer?: Organizer;
 }
+
+
+
 
 
 function mapApiEventToEvent(apiEvent: any): Event {
@@ -44,21 +54,33 @@ function mapApiEventToEvent(apiEvent: any): Event {
 
   const image_url = apiEvent.image_url || '';
 
-return {
-  id: apiEvent.id.toString(),
-  title: apiEvent.name || 'Evento sin título',
-  description: apiEvent.description || '',
-  date,
-  time,
-  location,
-  address,
-  image_url,
-  category,
-  attendees: undefined,
-  lat: apiEvent.latitude || null, 
-  lng: apiEvent.longitude || null 
-};
+  // ✅ Nuevo: mapear organizer si existe
+  const organizer = apiEvent.organizer
+    ? {
+        id: apiEvent.organizer.id?.toString() || '',
+        name: apiEvent.organizer.name || '',
+        member_since: apiEvent.organizer.member_since || 0,
+        avatar_url: apiEvent.organizer.avatar_url || '',
+      }
+    : undefined;
+
+  return {
+    id: apiEvent.id.toString(),
+    title: apiEvent.name || 'Evento sin título',
+    description: apiEvent.description || '',
+    date,
+    time,
+    location,
+    address,
+    image_url,
+    category,
+    attendees: undefined,
+    lat: apiEvent.latitude || null,
+    lng: apiEvent.longitude || null,
+    organizer // 👈 aquí lo incluimos
+  };
 }
+
 export const fetchUserEvents = async () => {
   const events = ref<Event[]>([]);
   const isLoading = ref(false);
@@ -98,7 +120,42 @@ export const useEvents = () => {
 
   const userStore = useUserStore(); // instancia del store
   const token = computed(() => userStore.token); // accede de forma reactiva
+  const userPosition = ref<{ lat: number, lng: number } | null>(null);
+const useCurrentLocation = ref(false); // si el usuario elige esta opción
+const distanceThresholdKm = 20; // distancia máxima para considerar "cerca"
 
+const getUserLocation = () => {
+  if (!navigator.geolocation) {
+    console.warn('Geolocalización no soportada');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      userPosition.value = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+    },
+    error => {
+      console.error('Error al obtener ubicación:', error);
+    }
+  );
+};
+
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
   const fetchEventsFromApi = async () => {
     isLoading.value = true;
     try {
@@ -155,38 +212,55 @@ export const useEvents = () => {
   }
 };
 
-  const filteredEvents = computed(() => {
-    let filtered = events.value;
+const filteredEvents = computed(() => {
+  let filtered = events.value;
 
-    if (searchQuery.value) {
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-      );
-    }
+  // Filtro por texto
+  if (searchQuery.value) {
+    filtered = filtered.filter(event =>
+      event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  }
 
-    if (selectedLocation.value) {
-      filtered = filtered.filter(event =>
-        event.location.toLowerCase().includes(selectedLocation.value.toLowerCase())
-      );
-    }
+  // Filtro por ubicación seleccionada
+  if (selectedLocation.value && !useCurrentLocation.value) {
+    filtered = filtered.filter(event =>
+      event.location.toLowerCase().includes(selectedLocation.value.toLowerCase())
+    );
+  }
 
-    return filtered;
-  });
+  // Filtro por ubicación actual
+  if (useCurrentLocation.value && userPosition.value) {
+    filtered = filtered.filter(event => {
+      if (event.lat && event.lng) {
+        const dist = getDistanceKm(userPosition.value!.lat, userPosition.value!.lng, event.lat, event.lng);
+        return dist <= distanceThresholdKm;
+      }
+      return false;
+    });
+  }
+
+  return filtered;
+});
+
 
   const getEventById = (id: string) => {
     return events.value.find(event => event.id === id);
   };
 
-  return {
-    events: readonly(events),
-    fetchEventsFromApi,
-    filteredEvents,
-    fetchUserEvents,
-    searchQuery,
-    selectedLocation,
-    getEventById,
-    createEvent,
-    isLoading
-  };
+return {
+  events: readonly(events),
+  fetchEventsFromApi,
+  filteredEvents,
+  fetchUserEvents,
+  searchQuery,
+  selectedLocation,
+  useCurrentLocation,
+  getUserLocation,
+  getEventById,
+  createEvent,
+  isLoading
+};
+
 };

@@ -119,20 +119,24 @@
           </div>
         </div>
 
-        <div class="card">
-          <h3 class="text-lg font-semibold text-white mb-4">Organizador</h3>
-          <div class="flex items-center space-x-3">
-            <img
-              src="https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=400"
-              alt="Organizador"
-              class="w-12 h-12 rounded-full"
-            />
-            <div>
-              <h4 class="font-medium text-white">Organizador del Evento</h4>
-              <p class="text-sm text-gray-400">Eventos desde 2020</p>
-            </div>
-          </div>
-        </div>
+     <div v-if="event.organizer" class="card">
+  <h3 class="text-lg font-semibold text-white mb-4">Organizador</h3>
+  <div class="flex items-center space-x-3">
+    <img
+      :src="event.organizer.avatar_url"
+      :alt="event.organizer.name"
+      class="w-12 h-12 rounded-full object-cover"
+    />
+    <div>
+      <h4 class="font-medium text-white">{{ event.organizer.name }}</h4>
+      <p class="text-sm text-gray-400">
+        Miembro desde {{ event.organizer.member_since }}
+      </p>
+    </div>
+  </div>
+</div>
+
+
       </div>
     </div>
 

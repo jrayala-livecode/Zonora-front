@@ -50,8 +50,11 @@
       <!-- Estado vacío -->
       <div v-else class="text-center py-12">
         <div class="text-gray-400 text-lg">No tienes eventos creados</div>
+        <!--
         <NuxtLink to="/create" class="btn-primary mt-4">Crear tu primer evento</NuxtLink>
+        -->
       </div>
+      
     </div>
 
     <!-- Modal Edición -->
