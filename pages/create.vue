@@ -232,7 +232,14 @@ const form = reactive({
   category: 'Música',
 });
 
-const selectedMapLocation = ref<{ lat: number; lng: number; address?: string } | null>(null);
+const selectedMapLocation = ref<{ lat: number; lng: number } | null>(null)
+
+watch(selectedMapLocation, (location) => {
+  if (location) {
+    form.latitude = location.lat
+    form.longitude = location.lng
+  }
+})
 const isSubmitting = ref(false);
 
 const selectedFile = ref<File | null>(null);
@@ -252,15 +259,7 @@ if (!form.image) {
   imagePreview.value = defaultImages[0];
 }
 */
-watch(selectedMapLocation, (loc) => {
-  if (loc) {
-    form.latitude = loc.lat;
-    form.longitude = loc.lng;
-    if (loc.address && !form.address) {
-      form.address = loc.address;
-    }
-  }
-});
+
 
 const onImageSelected = (e: Event) => {
   const input = e.target as HTMLInputElement;
