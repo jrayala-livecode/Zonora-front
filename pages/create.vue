@@ -102,11 +102,12 @@
                   </div>
                 </div>
               </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Seleccionar en el Mapa</label>
-                <MapSelector v-model="selectedMapLocation" />
-              </div>
+              <ClientOnly>
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Seleccionar en el Mapa</label>
+                  <MapSelector v-model="selectedMapLocation" />
+                </div>
+              </ClientOnly>
             </div>
           </div>
 
