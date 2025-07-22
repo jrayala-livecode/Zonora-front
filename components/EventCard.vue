@@ -2,7 +2,7 @@
   <div class="card hover:bg-gray-750 transition-all duration-300 cursor-pointer group transform hover:scale-105 hover:shadow-xl">
     <div class="flex space-x-4">
       <img
-        :src="event.image"
+        :src="event.image_url"
         :alt="event.title"
         class="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
       />

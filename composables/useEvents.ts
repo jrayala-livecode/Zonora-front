@@ -13,8 +13,11 @@ export interface Event {
   image_url: string;
   category: string;
   attendees?: number;
-  venue_id?: number; // opcional si el evento puede no tener un venue
+  venue_id?: number;
+  lat?: number | null;
+  lng?: number | null;
 }
+
 
 function mapApiEventToEvent(apiEvent: any): Event {
   const dateObj = new Date(apiEvent.date);
@@ -41,18 +44,20 @@ function mapApiEventToEvent(apiEvent: any): Event {
 
   const image_url = apiEvent.image_url || '';
 
-  return {
-    id: apiEvent.id.toString(),
-    title: apiEvent.name || 'Evento sin título',
-    description: apiEvent.description || '',
-    date,
-    time,
-    location,
-    address,
-    image_url,
-    category,
-    attendees: undefined
-  };
+return {
+  id: apiEvent.id.toString(),
+  title: apiEvent.name || 'Evento sin título',
+  description: apiEvent.description || '',
+  date,
+  time,
+  location,
+  address,
+  image_url,
+  category,
+  attendees: undefined,
+  lat: apiEvent.latitude || null, 
+  lng: apiEvent.longitude || null 
+};
 }
 export const fetchUserEvents = async () => {
   const events = ref<Event[]>([]);

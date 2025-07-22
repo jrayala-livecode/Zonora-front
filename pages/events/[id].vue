@@ -20,7 +20,7 @@
       <div class="lg:col-span-2">
         <div class="bg-gray-800 rounded-lg overflow-hidden mb-6">
           <img
-            :src="event.image"
+            :src="event.image_url"
             :alt="event.title"
             class="w-full h-64 md:h-96 object-cover"
           />
@@ -62,27 +62,30 @@
             </div>
             <p class="text-gray-300 ml-7">{{ event.address }}</p>
           </div>
-          <div class="bg-blue-200 rounded-lg h-64 flex items-center justify-center">
-            <div class="text-gray-600 text-center">
-              <MapPin class="w-8 h-8 mx-auto mb-2" />
-              <p>Mapa de ubicación</p>
-              <p class="text-sm">{{ event.address }}</p>
-            </div>
+         <div class="rounded-lg overflow-hidden h-64">
+  <MapLeaflet v-if="event.lat && event.lng" :lat="event.lat" :lng="event.lng" />
+  <div v-else class="bg-gray-700 text-center text-gray-400 py-10 rounded-lg">
+    Ubicación no disponible
+  </div>
           </div>
         </div>
       </div>
 
       <div class="space-y-6">
         <div class="card">
+          <!--
           <button class="btn-primary w-full mb-4">
             <Ticket class="w-5 h-5 mr-2" />
             Obtener Boletos
           </button>
+          -->
           <div class="flex space-x-2">
+            <!--
             <button class="btn-secondary flex-1 flex items-center justify-center">
               <Heart class="w-4 h-4 mr-2" />
               Favorito
             </button>
+             -->
             <button class="btn-secondary flex-1 flex items-center justify-center">
               <Share2 class="w-4 h-4 mr-2" />
               Compartir
@@ -147,18 +150,23 @@ import type { Event } from '~/composables/useEvents'; // ajusta según ruta real
 import { ref, computed, watch, onMounted } from 'vue';
 import { Calendar, Clock, MapPin, Users, Ticket, Heart, Share2 } from 'lucide-vue-next';
 import { useRoute } from 'vue-router';
+import MapLeaflet from '~/components/MapLeaflet.vue';
 
+
+const event = ref<Event | null | undefined>(null);
 const route = useRoute();
 const { events, fetchEventsFromApi, getEventById, isLoading } = useEvents();
 
 const eventId = route.params.id as string;
-const event = ref<Event | null | undefined>(null);
+
+
 
 onMounted(async () => {
   if (events.value.length === 0) {
     await fetchEventsFromApi();
   }
   event.value = getEventById(eventId);
+  
 });
 
 watch(events, () => {
