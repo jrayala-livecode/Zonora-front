@@ -134,9 +134,7 @@
                 <input type="file" accept="image/*" @change="onImageSelected" class="mx-auto mb-4" />
 
                 <div class="grid grid-cols-3 gap-2 mb-4">
-                  <button v-for="img in defaultImages" :key="img" @click="selectDefaultImage(img)" type="button" class="relative group">
-                    <img :src="img" alt="Imagen predeterminada" class="w-full h-16 object-cover rounded group-hover:opacity-75 transition-opacity" />
-                  </button>
+                  
                 </div>
               </div>
             </div>
@@ -239,7 +237,7 @@ const isSubmitting = ref(false);
 
 const selectedFile = ref<File | null>(null);
 const imagePreview = ref(form.image || '');
-
+/*
 const defaultImages = [
   'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800',
   'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800',
@@ -253,7 +251,7 @@ if (!form.image) {
   form.image = defaultImages[0];
   imagePreview.value = defaultImages[0];
 }
-
+*/
 watch(selectedMapLocation, (loc) => {
   if (loc) {
     form.latitude = loc.lat;
