@@ -5,6 +5,19 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue';
 import L from 'leaflet';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+
+// Arreglo para íconos en producción (Vercel)
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 import 'leaflet/dist/leaflet.css';
 
 let map: L.Map;
