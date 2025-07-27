@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet/dist/leaflet.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -28,9 +27,11 @@ const props = defineProps<{
 const mapRef = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
 
-onMounted(() => {
-  if (!mapRef.value) return;
+onMounted(async () => {
+  const L = await import('leaflet');
 
+  if (!mapRef.value) return;
+  
   map = L.map(mapRef.value).setView([props.lat, props.lng], 15);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
