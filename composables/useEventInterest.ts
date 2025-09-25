@@ -7,8 +7,6 @@ export const useEventInterest = () => {
   const loading = ref(false)
 
   const config = useRuntimeConfig()
-  const { $fetch } = useNuxtApp()
-
   const baseUrl = config.public.apiBaseUrl || 'http://localhost:8000'
 
   /**
@@ -17,15 +15,20 @@ export const useEventInterest = () => {
   const checkInterest = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await $fetch(`${baseUrl}/api/events/${eventId}/interest/check`, {
+      const response = await fetch(`${baseUrl}/api/events/${eventId}/interest/check`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`
         }
       })
       
-      isInterested.value = response.interested
-      interestedCount.value = response.interested_count
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      isInterested.value = data.interested
+      interestedCount.value = data.interested_count
+      return data
     } catch (error) {
       console.error('Error checking interest:', error)
       return { interested: false, interested_count: 0 }
@@ -40,7 +43,7 @@ export const useEventInterest = () => {
   const toggleInterest = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await $fetch(`${baseUrl}/api/events/${eventId}/toggle-interest`, {
+      const response = await fetch(`${baseUrl}/api/events/${eventId}/toggle-interest`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`,
@@ -48,9 +51,14 @@ export const useEventInterest = () => {
         }
       })
       
-      isInterested.value = response.interested
-      interestedCount.value = response.interested_count
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      isInterested.value = data.interested
+      interestedCount.value = data.interested_count
+      return data
     } catch (error) {
       console.error('Error toggling interest:', error)
       throw error
@@ -65,7 +73,7 @@ export const useEventInterest = () => {
   const addInterest = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await $fetch(`${baseUrl}/api/events/${eventId}/interest`, {
+      const response = await fetch(`${baseUrl}/api/events/${eventId}/interest`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`,
@@ -73,9 +81,14 @@ export const useEventInterest = () => {
         }
       })
       
-      isInterested.value = response.interested
-      interestedCount.value = response.interested_count
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      isInterested.value = data.interested
+      interestedCount.value = data.interested_count
+      return data
     } catch (error) {
       console.error('Error adding interest:', error)
       throw error
@@ -90,7 +103,7 @@ export const useEventInterest = () => {
   const removeInterest = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await $fetch(`${baseUrl}/api/events/${eventId}/interest`, {
+      const response = await fetch(`${baseUrl}/api/events/${eventId}/interest`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`,
@@ -98,9 +111,14 @@ export const useEventInterest = () => {
         }
       })
       
-      isInterested.value = response.interested
-      interestedCount.value = response.interested_count
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      isInterested.value = data.interested
+      interestedCount.value = data.interested_count
+      return data
     } catch (error) {
       console.error('Error removing interest:', error)
       throw error
@@ -115,11 +133,16 @@ export const useEventInterest = () => {
   const getInterestedUsers = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await $fetch(`${baseUrl}/api/events/${eventId}/interested-users`)
+      const response = await fetch(`${baseUrl}/api/events/${eventId}/interested-users`)
       
-      interestedUsers.value = response.data
-      interestedCount.value = response.count
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      interestedUsers.value = data.data
+      interestedCount.value = data.count
+      return data
     } catch (error) {
       console.error('Error getting interested users:', error)
       return { data: [], count: 0 }
