@@ -1,24 +1,24 @@
 <template>
-  <div class="min-h-screen bg-gray-900 py-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="objkt-container max-w-6xl">
       
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-        <span class="ml-3 text-gray-400 text-lg">Cargando artista...</span>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
+        <span class="ml-3 text-gray-600 text-lg">Cargando artista...</span>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <h3 class="text-lg font-medium text-red-400 mb-2">Error al cargar artista</h3>
-        <p class="text-gray-400 mb-6">{{ error }}</p>
+        <h3 class="objkt-heading-lg text-red-600 mb-2">Error al cargar artista</h3>
+        <p class="objkt-text-muted mb-6">{{ error }}</p>
         <div class="flex justify-center space-x-4">
           <button
             @click="loadArtist"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 transition-colors duration-200"
+            class="objkt-btn objkt-btn-primary"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -27,7 +27,7 @@
           </button>
           <NuxtLink
             to="/artists"
-            class="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-lg text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
+            class="objkt-btn objkt-btn-secondary"
           >
             Volver a artistas
           </NuxtLink>
@@ -40,7 +40,7 @@
         <div class="mb-6">
           <NuxtLink
             to="/artists"
-            class="inline-flex items-center text-orange-500 hover:text-orange-400 transition-colors duration-200"
+            class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -50,9 +50,9 @@
         </div>
 
         <!-- Artist Header -->
-        <div class="bg-gray-800 rounded-xl shadow-xl overflow-hidden mb-8">
+        <div class="objkt-card overflow-hidden mb-8">
           <!-- Hero Image -->
-          <div class="relative h-64 md:h-80 bg-gradient-to-br from-orange-500 to-red-600">
+          <div class="relative h-64 md:h-80 bg-gradient-to-br from-gray-200 to-gray-300">
             <img
               v-if="artist.profile_picture_url"
               :src="$convertImageUrl(artist.profile_picture_url)"
