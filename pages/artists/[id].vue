@@ -108,17 +108,6 @@
               <!-- Action Buttons -->
               <div class="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
                 <button
-                  v-if="artist.social_links && artist.social_links.length > 0"
-                  @click="showSocialLinks = !showSocialLinks"
-                  class="inline-flex items-center px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  Enlaces
-                </button>
-                
-                <button
                   class="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors duration-200"
                 >
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +308,9 @@ const loadArtist = async () => {
     
     // Load artist links
     if (artist.value) {
+      console.log('Loading artist links for artist ID:', route.params.id);
       await getLinks(parseInt(route.params.id as string));
+      console.log('Artist links loaded:', artistLinks.value);
     }
   } catch (err: any) {
     error.value = err.message || 'Error al cargar artista';
