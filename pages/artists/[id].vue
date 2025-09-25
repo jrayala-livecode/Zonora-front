@@ -308,9 +308,7 @@ const loadArtist = async () => {
     
     // Load artist links
     if (artist.value) {
-      console.log('Loading artist links for artist ID:', route.params.id);
       await getLinks(parseInt(route.params.id as string));
-      console.log('Artist links loaded:', artistLinks.value);
     }
   } catch (err: any) {
     error.value = err.message || 'Error al cargar artista';

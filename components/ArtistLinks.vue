@@ -7,11 +7,6 @@
       Enlaces
     </h3>
     
-    <!-- Debug info -->
-    <div class="text-xs text-gray-400 mb-2">
-      Debug: {{ links.length }} links found
-    </div>
-    
     <div v-if="links.length > 0" class="space-y-2">
       <a
         v-for="link in links"
