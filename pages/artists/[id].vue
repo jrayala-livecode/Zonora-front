@@ -197,29 +197,10 @@
         </div>
 
         <!-- Additional Links Section -->
-        <div v-if="artist.links && artist.links.length > 0" class="bg-gray-800 rounded-xl shadow-xl mb-8">
+        <!-- Artist Links Section -->
+        <div v-if="artistLinks.length > 0" class="bg-gray-800 rounded-xl shadow-xl mb-8">
           <div class="p-8">
-            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-              <svg class="w-6 h-6 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-              Enlaces Adicionales
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a
-                v-for="(link, index) in artist.links"
-                :key="index"
-                :href="link"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200"
-              >
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                {{ link }}
-              </a>
-            </div>
+            <ArtistLinks :links="artistLinks" />
           </div>
         </div>
 
@@ -318,6 +299,9 @@ import { ref, onMounted } from 'vue';
 const route = useRoute();
 const { getArtist } = useArtists();
 
+// Artist links functionality
+const { links: artistLinks, getLinks } = useArtistLinks();
+
 // State
 const artist = ref<any>(null);
 const loading = ref(true);
@@ -332,6 +316,11 @@ const loadArtist = async () => {
   
   try {
     artist.value = await getArtist(route.params.id as string);
+    
+    // Load artist links
+    if (artist.value) {
+      await getLinks(parseInt(route.params.id as string));
+    }
   } catch (err: any) {
     error.value = err.message || 'Error al cargar artista';
     console.error('Error loading artist:', err);
