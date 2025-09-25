@@ -27,12 +27,24 @@
       <div class="lg:col-span-2">
         <div class="bg-gray-800 rounded-lg overflow-hidden mb-6">
           <img
+            v-if="event.image_url && !imageLoadFailed"
             :src="event.image_url"
             :alt="`Imagen del evento ${event.title} en ${event.location}`"
-            class="w-full h-64 md:h-96 object-cover"
+            class="w-full aspect-[4/3] object-cover"
             itemprop="image"
             loading="eager"
+            @error="handleImageError"
           />
+          <!-- Fallback when image fails or doesn't exist -->
+          <div
+            v-else
+            class="w-full aspect-[4/3] bg-gray-700 flex items-center justify-center"
+          >
+            <div class="text-center">
+              <div class="text-gray-400 text-lg mb-2">Sin Imagen</div>
+              <div class="text-gray-500 text-sm">No hay imagen disponible para este evento</div>
+            </div>
+          </div>
         </div>
 
         <div class="card mb-6">
@@ -48,7 +60,9 @@
                 <span class="text-gray-300">{{ event.time }}</span>
               </div>
               <div class="flex items-center space-x-2">
-                <MapPin class="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <ClientOnly>
+                  <MapPin class="w-4 h-4 text-gray-400" aria-hidden="true" />
+                </ClientOnly>
                 <span class="text-gray-300" itemprop="location" itemscope itemtype="https://schema.org/Place">
                   <span itemprop="name">{{ event.location }}</span>
                 </span>
@@ -68,6 +82,67 @@
           </section>
         </div>
 
+        <!-- Pricing Section -->
+        <div v-if="event.price_range || event.active_price || (event.formatted_prices && event.formatted_prices.length > 0)" class="card mb-6">
+          <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
+            <div class="w-6 h-6 bg-orange-500 rounded-sm flex items-center justify-center mr-3" aria-hidden="true">
+              <span class="text-white font-bold text-sm">💰</span>
+            </div>
+            Precios de Entrada
+          </h2>
+          
+          <div class="space-y-4">
+            <!-- Price Range Display -->
+            <div v-if="event.price_range" class="bg-gray-700 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-medium text-white">Precio General</span>
+                <span class="text-xl font-bold text-orange-400">{{ event.price_range }}</span>
+              </div>
+            </div>
+            
+            <!-- Active Price Display -->
+            <div v-else-if="event.active_price" class="bg-gray-700 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-lg font-medium text-white">{{ event.active_price.name }}</span>
+                  <p class="text-sm text-gray-400">Precio actual</p>
+                </div>
+                <span class="text-xl font-bold text-orange-400">
+                  {{ event.active_price.price === 0 ? 'Gratis' : `$${event.active_price.price.toLocaleString('es-CL')}` }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- All Prices Display -->
+            <div v-if="event.formatted_prices && event.formatted_prices.length > 0" class="space-y-3">
+              <div 
+                v-for="(price, index) in event.formatted_prices" 
+                :key="index"
+                :class="[
+                  'bg-gray-700 rounded-lg p-4 border-2 transition-colors duration-200',
+                  price.active ? 'border-orange-500 bg-orange-500/10' : 'border-transparent hover:border-gray-600'
+                ]"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-lg font-medium text-white">{{ price.name }}</span>
+                    <span v-if="price.active" class="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">Actual</span>
+                  </div>
+                  <span class="text-xl font-bold text-orange-400">{{ price.formatted_price }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- No Prices Available -->
+            <div v-else class="text-center py-8">
+              <div class="text-gray-400">
+                <div class="text-lg mb-2">Precios no disponibles</div>
+                <div class="text-sm">Contacta al organizador para más información</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <section class="card" aria-labelledby="location-heading">
           <h2 id="location-heading" class="text-xl font-semibold text-white mb-4">Ubicación</h2>
           <div class="mb-4" itemprop="location" itemscope itemtype="https://schema.org/Place">
@@ -78,6 +153,17 @@
             <address class="text-gray-300 ml-7 not-italic" itemprop="address">{{ event.address }}</address>
             <meta itemprop="latitude" :content="event.latitude?.toString()" />
             <meta itemprop="longitude" :content="event.longitude?.toString()" />
+            
+            <!-- Venue Link -->
+            <div v-if="event.venue" class="mt-4">
+              <NuxtLink
+                :to="`/venues/${event.venue.id}`"
+                class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              >
+                <MapPin class="w-4 h-4 mr-2" />
+                Ver Venue: {{ event.venue.name }}
+              </NuxtLink>
+            </div>
           </div>
           <div class="rounded-lg overflow-hidden h-64">
             <MapLeaflet
@@ -206,6 +292,7 @@ const config = useRuntimeConfig();
 
 const eventId = route.params.id as string;
 const isLoading = ref(true);
+const imageLoadFailed = ref(false);
 
 onMounted(async () => {
   const L = await import('leaflet');
@@ -215,6 +302,7 @@ onMounted(async () => {
 
 const fetchEvent = async () => {
   isLoading.value = true;
+  imageLoadFailed.value = false; // Reset image error state
   try {
     event.value = await getEventById(eventId);
   } catch (error) {
@@ -223,6 +311,10 @@ const fetchEvent = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+const handleImageError = () => {
+  imageLoadFailed.value = true;
 };
 
 const formatDate = (dateString: string) => {
@@ -262,7 +354,7 @@ const structuredData = computed(() => {
         "longitude": event.value.longitude
       } : undefined
     },
-    "image": event.value.image_url,
+    "image": event.value.image_url || undefined,
     "url": `${config.public.baseUrl}/events/${eventId}`,
     "category": event.value.category,
     "organizer": event.value.organizer ? {
@@ -369,14 +461,16 @@ useHead(() => {
         property: 'og:url',
         content: `${config.public.baseUrl}/events/${eventId}`
       },
-      {
-        property: 'og:image',
-        content: event.value.image_url
-      },
-      {
-        property: 'og:image:alt',
-        content: `Imagen del evento ${event.value.title}`
-      },
+      ...(event.value.image_url ? [
+        {
+          property: 'og:image',
+          content: event.value.image_url
+        },
+        {
+          property: 'og:image:alt',
+          content: `Imagen del evento ${event.value.title}`
+        }
+      ] : []),
       {
         property: 'og:site_name',
         content: 'Zonora'
@@ -398,14 +492,16 @@ useHead(() => {
         name: 'twitter:description',
         content: `${event.value.description.substring(0, 155)}...`
       },
-      {
-        name: 'twitter:image',
-        content: event.value.image_url
-      },
-      {
-        name: 'twitter:image:alt',
-        content: `Imagen del evento ${event.value.title}`
-      },
+      ...(event.value.image_url ? [
+        {
+          name: 'twitter:image',
+          content: event.value.image_url
+        },
+        {
+          name: 'twitter:image:alt',
+          content: `Imagen del evento ${event.value.title}`
+        }
+      ] : []),
       // Event specific meta
       {
         name: 'event:start_time',
