@@ -7,7 +7,12 @@ export const useEventInterest = () => {
   const loading = ref(false)
 
   const config = useRuntimeConfig()
-  const baseUrl = config.public.apiBaseUrl || 'http://localhost:8000'
+  let baseUrl = config.public.apiBaseUrl || 'http://localhost:8000'
+  
+  // Ensure baseUrl doesn't already end with /api to avoid double /api
+  if (baseUrl.endsWith('/api')) {
+    baseUrl = baseUrl.replace('/api', '')
+  }
 
   /**
    * Check if user is interested in an event
