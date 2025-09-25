@@ -240,47 +240,149 @@
             </div>
           </section>
 
-          <!-- Configuración Adicional -->
-          <section class="card" aria-labelledby="config-heading">
-            <h2 id="config-heading" class="text-xl font-semibold text-white mb-6 flex items-center">
+          <!-- Precios -->
+          <section class="card" aria-labelledby="pricing-heading">
+            <h2 id="pricing-heading" class="text-xl font-semibold text-white mb-6 flex items-center">
               <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3" aria-hidden="true">
                 <span class="text-white font-bold">5</span>
               </div>
-              Configuración
+              Precios
             </h2>
             
-            <div class="space-y-4">
-              <div>
-                <label for="event-status" class="block text-sm font-medium text-gray-300 mb-2">Estado del Evento</label>
-                <select 
-                  id="event-status"
-                  v-model.number="form.status_id" 
-                  class="input-field w-full"
-                  aria-describedby="event-status-help"
-                >
-                  <option value="1">Borrador</option>
-                  <option value="2">Publicado</option>
-                  <option value="3">Cancelado</option>
-                  <option value="4">Finalizado</option>
-                  <option value="5">Activo</option>
-                </select>
-                <div id="event-status-help" class="sr-only">Selecciona el estado inicial del evento</div>
+            <div class="space-y-6">
+              <!-- Publicar Precios Toggle -->
+              <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div>
+                  <h3 class="text-lg font-medium text-white mb-1">Publicar Precios</h3>
+                  <p class="text-sm text-gray-400">Permite a los usuarios ver los precios del evento</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    v-model="form.show_prices" 
+                    type="checkbox" 
+                    class="sr-only peer"
+                    aria-describedby="pricing-toggle-help"
+                  />
+                  <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                </label>
+              </div>
+              <div id="pricing-toggle-help" class="sr-only">Activa esta opción para mostrar los precios públicamente</div>
+
+              <!-- Precios del Evento -->
+              <div v-if="form.show_prices" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Precio General -->
+                  <div>
+                    <label for="general-price" class="block text-sm font-medium text-gray-300 mb-2">
+                      Precio General ({{ currencyName }})
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
+                      <input 
+                        id="general-price"
+                        v-model="form.general_price" 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        :placeholder="currencyPlaceholder" 
+                        class="input-field w-full pl-8" 
+                        aria-describedby="general-price-help"
+                      />
+                    </div>
+                    <p id="general-price-help" class="text-xs text-gray-500 mt-1">Precio estándar para el evento</p>
+                  </div>
+
+                  <!-- Precio VIP -->
+                  <div>
+                    <label for="vip-price" class="block text-sm font-medium text-gray-300 mb-2">
+                      Precio VIP (Opcional) ({{ currencyName }})
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
+                      <input 
+                        id="vip-price"
+                        v-model="form.vip_price" 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        :placeholder="currencyPlaceholder" 
+                        class="input-field w-full pl-8"
+                        aria-describedby="vip-price-help"
+                      />
+                    </div>
+                    <p id="vip-price-help" class="text-xs text-gray-500 mt-1">Precio especial para área VIP</p>
+                  </div>
+                </div>
+
+                <!-- Precio Estudiantil -->
+                <div>
+                  <label for="student-price" class="block text-sm font-medium text-gray-300 mb-2">
+                    Precio Estudiantil (Opcional) ({{ currencyName }})
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
+                    <input 
+                      id="student-price"
+                      v-model="form.student_price" 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      :placeholder="currencyPlaceholder" 
+                      class="input-field w-full pl-8"
+                      aria-describedby="student-price-help"
+                    />
+                  </div>
+                  <p id="student-price-help" class="text-xs text-gray-500 mt-1">Descuento para estudiantes con credencial</p>
+                </div>
+
+                <!-- Información de Precios -->
+                <div>
+                  <label for="pricing-info" class="block text-sm font-medium text-gray-300 mb-2">Información Adicional de Precios</label>
+                  <textarea 
+                    id="pricing-info"
+                    v-model="form.pricing_info" 
+                    rows="3" 
+                    placeholder="Ej: Incluye una bebida, Descuento por compra anticipada, etc." 
+                    class="input-field w-full resize-none"
+                    aria-describedby="pricing-info-help"
+                  ></textarea>
+                  <p id="pricing-info-help" class="text-xs text-gray-500 mt-1">Información adicional sobre precios, descuentos o promociones</p>
+                </div>
+
+                <!-- Moneda -->
+                <div>
+                  <label for="currency" class="block text-sm font-medium text-gray-300 mb-2">
+                    Moneda ({{ currencySymbol }} {{ form.currency }})
+                  </label>
+                  <select 
+                    id="currency"
+                    v-model="form.currency" 
+                    class="input-field w-full"
+                    aria-describedby="currency-help"
+                  >
+                    <option value="USD">USD - Dólar Estadounidense</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="CLP">CLP - Peso Chileno</option>
+                    <option value="MXN">MXN - Peso Mexicano</option>
+                    <option value="ARS">ARS - Peso Argentino</option>
+                    <option value="COP">COP - Peso Colombiano</option>
+                    <option value="PEN">PEN - Sol Peruano</option>
+                  </select>
+                  <p id="currency-help" class="text-xs text-gray-500 mt-1">Selecciona la moneda para los precios</p>
+                </div>
               </div>
 
-              <div>
-                <label for="commune-id" class="block text-sm font-medium text-gray-300 mb-2">ID de Comuna</label>
-                <input 
-                  id="commune-id"
-                  v-model.number="form.commune_id" 
-                  type="number" 
-                  placeholder="Opcional" 
-                  class="input-field w-full"
-                  aria-describedby="commune-help"
-                />
-                <div id="commune-help" class="sr-only">Ingresa el ID de la comuna si está disponible</div>
+              <!-- Mensaje cuando no se publican precios -->
+              <div v-else class="p-4 bg-gray-700 rounded-lg text-center">
+                <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <p class="text-gray-400">Los precios no se mostrarán públicamente</p>
+                <p class="text-sm text-gray-500 mt-1">Los usuarios podrán contactarte para información de precios</p>
               </div>
             </div>
           </section>
+
         </div>
 
         <div class="flex justify-center pt-8">
@@ -345,9 +447,14 @@ const form = reactive({
   hashtags: '',
   information_links: '',
   publish_date: '',
-  status_id: 5,
-  commune_id: undefined as number | undefined,
   category: 'Música',
+  // Pricing fields
+  show_prices: false,
+  general_price: '',
+  vip_price: '',
+  student_price: '',
+  pricing_info: '',
+  currency: 'USD',
 });
 
 const selectedMapLocation = ref<{ lat: number; lng: number } | null>(null)
@@ -357,6 +464,46 @@ watch(selectedMapLocation, (location) => {
     form.latitude = location.lat
     form.longitude = location.lng
   }
+})
+
+// Currency formatting
+const currencySymbol = computed(() => {
+  const symbols: Record<string, string> = {
+    'USD': '$',
+    'EUR': '€',
+    'CLP': '$',
+    'MXN': '$',
+    'ARS': '$',
+    'COP': '$',
+    'PEN': 'S/'
+  }
+  return symbols[form.currency] || '$'
+})
+
+const currencyName = computed(() => {
+  const names: Record<string, string> = {
+    'USD': 'Dólar Estadounidense',
+    'EUR': 'Euro',
+    'CLP': 'Peso Chileno',
+    'MXN': 'Peso Mexicano',
+    'ARS': 'Peso Argentino',
+    'COP': 'Peso Colombiano',
+    'PEN': 'Sol Peruano'
+  }
+  return names[form.currency] || 'Dólar Estadounidense'
+})
+
+const currencyPlaceholder = computed(() => {
+  const placeholders: Record<string, string> = {
+    'USD': '0.00',
+    'EUR': '0,00',
+    'CLP': '0',
+    'MXN': '0.00',
+    'ARS': '0.00',
+    'COP': '0.00',
+    'PEN': '0.00'
+  }
+  return placeholders[form.currency] || '0.00'
 })
 
 const isSubmitting = ref(false);
@@ -412,9 +559,18 @@ const createEventHandler = async () => {
       .filter(link => link !== '')
       .forEach(link => formData.append('information_links[]', link));
 
-    formData.append('status_id', form.status_id.toString());
-    formData.append('commune_id', form.commune_id ? form.commune_id.toString() : '');
+    // status_id and commune_id are handled internally by the system
     formData.append('category', form.category);
+
+    // Pricing data
+    formData.append('show_prices', form.show_prices ? '1' : '0');
+    if (form.show_prices) {
+      if (form.general_price) formData.append('general_price', form.general_price);
+      if (form.vip_price) formData.append('vip_price', form.vip_price);
+      if (form.student_price) formData.append('student_price', form.student_price);
+      if (form.pricing_info) formData.append('pricing_info', form.pricing_info);
+      formData.append('currency', form.currency);
+    }
 
     if (selectedFile.value) {
       formData.append('image', selectedFile.value);
