@@ -34,31 +34,6 @@
                 <!-- ...existing radio buttons... -->
               </div>
             </div>
-
-            <div class="flex items-center space-x-6">
-              <label class="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="locationFilter"
-                  :checked="!useCurrentLocation"
-                  @change="handleUseCurrentLocation(false)"
-                  class="text-orange-500"
-                />
-                <span class="text-gray-300">Todos los eventos</span>
-              </label>
-
-              <label class="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="locationFilter"
-                  :checked="useCurrentLocation"
-                  @change="handleUseCurrentLocation(true)"
-                  class="text-orange-500"
-
-                />
-                <span class="text-gray-300">Usar ubicación actual</span>
-              </label>
-            </div>
           </div>
           <div
             v-if="useCurrentLocation && locationError"
@@ -77,7 +52,7 @@
         <!-- Map -->
         <div class="bg-gray-800 rounded-lg p-4 mb-6">
           <div class="text-gray-600 text-center">
-            <MapView v-if="isMounted" :events="currentEvents" />
+            <MapView v-if="isMounted" :events="currentEvents as any" />
             <div v-else class="w-full h-64 rounded-lg bg-gray-200 flex items-center justify-center">
               <p class="text-gray-500">Cargando mapa...</p>
             </div>
@@ -156,7 +131,7 @@
               :to="`/events/${event.id}`"
               class="block"
             >
-              <EventCard :event="event" />
+              <EventCard :event="event as any" />
             </NuxtLink>
           </div>
 
