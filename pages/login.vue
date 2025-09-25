@@ -46,11 +46,25 @@
             <!-- hCaptcha -->
             <div id="hcaptcha-container" class="my-4"></div>
 
+            <!-- Dev Admin Login (only in development) -->
+            <div v-if="isDev" class="my-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+              <p class="text-yellow-400 text-sm mb-2">🔧 Development Mode</p>
+              <button
+                type="button"
+                @click="handleDevAdminLogin"
+                class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
+                :disabled="isLoading"
+              >
+                <span v-if="isLoading">Iniciando como admin...</span>
+                <span v-else>Login como Admin (Dev)</span>
+              </button>
+            </div>
+
             <!-- Login Button -->
             <button
               type="submit"
               class="btn-primary w-full"
-              :disabled="isLoading || !form.hCaptcha"
+              :disabled="isLoading || (!isDev && !form.hCaptcha)"
             >
               <span v-if="isLoading">Iniciando sesión...</span>
               <span v-else>Iniciar Sesión</span>
@@ -128,6 +142,9 @@ const isLoggedIn = ref(false);
 const formKey = ref(0);
 const modalMessage = ref('');
 
+// Check if we're in development mode
+const isDev = process.env.NODE_ENV === 'development' || process.dev || (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
 const form = reactive({
   email: '',
   password: '',
@@ -185,8 +202,8 @@ onMounted(async () => {
 });
 
 const handleLogin = async () => {
-  if (!form.hCaptcha) {
-    modalMessage.value = 'Por favor completá el captcha.';
+  if (!isDev && !form.hCaptcha) {
+    modalMessage.value = 'Por favor completa el captcha.';
     return;
   }
 
@@ -198,25 +215,55 @@ const handleLogin = async () => {
       hcaptchaToken: form.hCaptcha,
     });
 
-    // Limpio el formulario al loguearse exitosamente
     form.email = '';
     form.password = '';
     form.hCaptcha = '';
 
-    // Reseteo el captcha si existe la función
     if (window.hcaptcha && window.hcaptcha.reset) {
       window.hcaptcha.reset();
     }
 
-    // Fade out y redirijo
     isFadingOut.value = true;
     setTimeout(() => {
       isLoggedIn.value = true;
-      router.push('/'); // o la ruta que uses para la home
+      router.push('/');
     }, 700);
+    
   } catch (error) {
     modalMessage.value = 'Error al iniciar sesión. Verifica tus credenciales.';
     console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleDevAdminLogin = async () => {
+  if (!isDev) {
+    modalMessage.value = 'Esta función solo está disponible en modo desarrollo.';
+    return;
+  }
+
+  isLoading.value = true;
+  try {
+    console.log('Attempting dev admin login...');
+    // Use a default admin email for development
+    // You can change this to any admin email in your database
+    await login({
+      email: 'admin@dev.local',
+      password: 'admin123',
+      hcaptchaToken: 'dev-bypass-token', // Bypass token for development
+    });
+
+    console.log('Dev admin login successful!');
+    isFadingOut.value = true;
+    setTimeout(() => {
+      isLoggedIn.value = true;
+      router.push('/');
+    }, 700);
+    
+  } catch (error) {
+    console.error('Dev admin login error:', error);
+    modalMessage.value = `Error al iniciar sesión como admin: ${error.message || error}`;
   } finally {
     isLoading.value = false;
   }

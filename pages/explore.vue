@@ -21,10 +21,10 @@
           v-for="event in eventsNearby"
           :key="event.id"
           :to="`/events/${event.id}`"
-          class="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors duration-200 cursor-pointer block"
+          class="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors duration-200 cursor-pointer block h-full flex flex-col"
         >
           <h3 class="text-xl font-semibold text-white mb-2">{{ event.name }}</h3>
-          <p class="text-gray-400 mb-4">{{ event.description }}</p>
+          <p class="text-gray-400 mb-4 flex-1">{{ event.description }}</p>
           <div class="text-sm text-gray-500">{{ new Date(event.date).toLocaleDateString() }}</div>
         </NuxtLink>
       </div>

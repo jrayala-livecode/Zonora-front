@@ -9,16 +9,6 @@ import 'leaflet/dist/leaflet.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-
-// Arreglo para íconos en producción (Vercel)
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 const props = defineProps<{
   lat: number;
   lng: number;
@@ -29,6 +19,15 @@ let map: L.Map | null = null;
 
 onMounted(async () => {
   const L = await import('leaflet');
+
+  // Arreglo para íconos en producción (Vercel)
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+  });
 
   if (!mapRef.value) return;
   

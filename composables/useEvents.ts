@@ -24,7 +24,24 @@ export interface Event {
   latitude?: number;
   longitude?: number;
   organizer?: Organizer;
-  venue: Venue | null; // Asegúrate de que Venue esté importado correctamente
+  venue: Venue | null;
+  prices?: Array<{
+    name: string;
+    price: number;
+    active?: boolean;
+  }>;
+  price_range?: string;
+  formatted_prices?: Array<{
+    name: string;
+    price: number;
+    active: boolean;
+    formatted_price: string;
+  }>;
+  active_price?: {
+    name: string;
+    price: number;
+    active: boolean;
+  };
 }
 
 export interface PaginatedEvents {
@@ -87,7 +104,11 @@ function mapApiEventToEvent(apiEvent: any): Event {
     latitude: apiEvent.latitude || null,
     longitude: apiEvent.longitude || null,
     organizer,
-    venue: apiEvent.venue || null
+    venue: apiEvent.venue || null,
+    prices: apiEvent.prices || [],
+    price_range: apiEvent.price_range || '',
+    formatted_prices: apiEvent.formatted_prices || [],
+    active_price: apiEvent.active_price || null
   };
 }
 

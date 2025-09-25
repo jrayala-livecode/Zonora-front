@@ -2,10 +2,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
- css: [
-  'leaflet/dist/leaflet.css',
-],
-
   // SSR Configuration
   ssr: true,
   
@@ -14,11 +10,11 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
-      title: 'Zonora - Descubre Eventos Increíbles',
+      title: 'Zonora',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'Descubre y crea eventos increíbles en Zonora' }
+        { name: 'description', content: 'Descubre y crea eventos increíbles en Zonora' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
@@ -35,7 +31,10 @@ export default defineNuxtConfig({
   ],
   
   // CSS Configuration
-  css: ['~/assets/css/main.css'],
+  css: [
+    '~/assets/css/main.css',
+    'leaflet/dist/leaflet.css'
+  ],
   
   // Google Fonts
   googleFonts: {
