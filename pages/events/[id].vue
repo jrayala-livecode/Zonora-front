@@ -80,6 +80,35 @@
             </h2>
             <div class="text-gray-300 leading-relaxed" itemprop="description">{{ event.description }}</div>
           </section>
+
+          <!-- Interest Section -->
+          <div class="mt-6 flex flex-col sm:flex-row gap-4">
+            <button
+              @click="handleToggleInterest"
+              :disabled="loading"
+              :class="[
+                'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
+                isInterested 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-orange-600 hover:bg-orange-700 text-white'
+              ]"
+            >
+              <Heart 
+                :class="[
+                  'w-5 h-5 mr-2 transition-transform duration-200',
+                  isInterested ? 'fill-current' : ''
+                ]"
+              />
+              <span v-if="loading">Procesando...</span>
+              <span v-else-if="isInterested">Ya no me interesa</span>
+              <span v-else>Me gustaría asistir</span>
+            </button>
+            
+            <div class="flex items-center text-gray-400 text-sm">
+              <Users class="w-4 h-4 mr-2" />
+              <span>{{ interestedCount }} persona{{ interestedCount !== 1 ? 's' : '' }} interesada{{ interestedCount !== 1 ? 's' : '' }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Pricing Section -->
@@ -138,6 +167,33 @@
               <div class="text-gray-400">
                 <div class="text-lg mb-2">Precios no disponibles</div>
                 <div class="text-sm">Contacta al organizador para más información</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interested Users Section -->
+        <div v-if="interestedUsers.length > 0" class="card mb-6">
+          <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
+            <Users class="w-6 h-6 mr-3 text-orange-500" />
+            Personas Interesadas ({{ interestedCount }})
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div 
+              v-for="user in interestedUsers" 
+              :key="user.id"
+              class="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200"
+            >
+              <img
+                :src="user.avatar_url"
+                :alt="`Avatar de ${user.name}`"
+                class="w-10 h-10 rounded-full object-cover"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-white font-medium truncate">{{ user.name }}</p>
+                <p class="text-gray-400 text-sm">
+                  Interesado{{ user.created_at ? ` el ${formatDate(user.created_at)}` : '' }}
+                </p>
               </div>
             </div>
           </div>
@@ -290,6 +346,17 @@ const route = useRoute();
 const { events, fetchEventsFromApi, getEventById } = useEvents();
 const config = useRuntimeConfig();
 
+// Event interest functionality
+const {
+  isInterested,
+  interestedCount,
+  interestedUsers,
+  loading,
+  checkInterest,
+  toggleInterest,
+  getInterestedUsers
+} = useEventInterest();
+
 const eventId = route.params.id as string;
 const isLoading = ref(true);
 const imageLoadFailed = ref(false);
@@ -305,6 +372,14 @@ const fetchEvent = async () => {
   imageLoadFailed.value = false; // Reset image error state
   try {
     event.value = await getEventById(eventId);
+    
+    // Load interest data
+    if (event.value) {
+      await Promise.all([
+        checkInterest(parseInt(eventId)),
+        getInterestedUsers(parseInt(eventId))
+      ]);
+    }
   } catch (error) {
     console.error("Error al cargar el evento:", error);
     event.value = null;
@@ -315,6 +390,15 @@ const fetchEvent = async () => {
 
 const handleImageError = () => {
   imageLoadFailed.value = true;
+};
+
+const handleToggleInterest = async () => {
+  try {
+    await toggleInterest(parseInt(eventId));
+  } catch (error) {
+    console.error('Error toggling interest:', error);
+    // You could add a toast notification here
+  }
 };
 
 const formatDate = (dateString: string) => {
