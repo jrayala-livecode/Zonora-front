@@ -1,5 +1,5 @@
 <template>
-  <div v-if="links.length > 0" class="space-y-3">
+  <div class="space-y-3">
     <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
       <div class="w-6 h-6 bg-orange-500 rounded-sm flex items-center justify-center mr-3">
         <span class="text-white font-bold text-sm">🔗</span>
@@ -7,7 +7,7 @@
       Enlaces
     </h3>
     
-    <div class="space-y-2">
+    <div v-if="links.length > 0" class="space-y-2">
       <a
         v-for="link in links"
         :key="link.id"
@@ -35,6 +35,11 @@
           </svg>
         </div>
       </a>
+    </div>
+    
+    <div v-else class="text-center py-8">
+      <div class="text-gray-400 text-lg mb-2">🔗</div>
+      <p class="text-gray-400">No hay enlaces disponibles</p>
     </div>
   </div>
 </template>

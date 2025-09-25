@@ -198,7 +198,7 @@
 
         <!-- Additional Links Section -->
         <!-- Artist Links Section -->
-        <div v-if="artistLinks.length > 0" class="bg-gray-800 rounded-xl shadow-xl mb-8">
+        <div class="bg-gray-800 rounded-xl shadow-xl mb-8">
           <div class="p-8">
             <ArtistLinks :links="artistLinks" />
           </div>
