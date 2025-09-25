@@ -43,7 +43,10 @@ export const useEventInterest = () => {
   const toggleInterest = async (eventId: number) => {
     try {
       loading.value = true
-      const response = await fetch(`${baseUrl}/api/events/${eventId}/toggle-interest`, {
+      const url = `${baseUrl}/api/events/${eventId}/toggle-interest`
+      console.log('Toggle interest URL:', url)
+      console.log('Base URL:', baseUrl)
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`,
