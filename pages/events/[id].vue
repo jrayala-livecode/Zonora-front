@@ -23,23 +23,15 @@
       </div>
     </div>
 
-    <article v-else-if="event" class="grid grid-cols-1 lg:grid-cols-3 gap-8" itemscope itemtype="https://schema.org/Event">
+    <article v-else-if="event" class="grid grid-cols-1 lg:grid-cols-3 gap-8" itemscope
+      itemtype="https://schema.org/Event">
       <div class="lg:col-span-2">
         <div class="bg-gray-800 rounded-lg overflow-hidden mb-6">
-          <img
-            v-if="event.image_url && !imageLoadFailed"
-            :src="event.image_url"
-            :alt="`Imagen del evento ${event.title} en ${event.location}`"
-            class="w-full aspect-[4/3] object-cover"
-            itemprop="image"
-            loading="eager"
-            @error="handleImageError"
-          />
+          <img v-if="event.image_url && !imageLoadFailed" :src="event.image_url"
+            :alt="`Imagen del evento ${event.title} en ${event.location}`" class="w-full aspect-[4/3] object-cover"
+            itemprop="image" loading="eager" @error="handleImageError" />
           <!-- Fallback when image fails or doesn't exist -->
-          <div
-            v-else
-            class="w-full aspect-[4/3] bg-gray-700 flex items-center justify-center"
-          >
+          <div v-else class="w-full aspect-[4/3] bg-gray-700 flex items-center justify-center">
             <div class="text-center">
               <div class="text-gray-400 text-lg mb-2">Sin Imagen</div>
               <div class="text-gray-500 text-sm">No hay imagen disponible para este evento</div>
@@ -53,7 +45,8 @@
             <div class="flex flex-wrap gap-4 mb-6 text-sm">
               <div class="flex items-center space-x-2">
                 <Calendar class="w-4 h-4 text-gray-400" aria-hidden="true" />
-                <time class="text-gray-300" :datetime="event.date" itemprop="startDate">{{ formatDate(event.date) }}</time>
+                <time class="text-gray-300" :datetime="event.date" itemprop="startDate">{{ formatDate(event.date)
+                  }}</time>
               </div>
               <div class="flex items-center space-x-2">
                 <Clock class="w-4 h-4 text-gray-400" aria-hidden="true" />
@@ -83,43 +76,40 @@
 
           <!-- Interest Section -->
           <div class="mt-6 flex flex-col sm:flex-row gap-4">
-            <button
-              @click="handleToggleInterest"
-              :disabled="loading"
-              :class="[
-                'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
-                isInterested 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-orange-600 hover:bg-orange-700 text-white'
-              ]"
-            >
-              <Heart 
-                :class="[
-                  'w-5 h-5 mr-2 transition-transform duration-200',
-                  isInterested ? 'fill-current' : ''
-                ]"
-              />
+            <button @click="handleToggleInterest" :disabled="loading" :class="[
+              'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
+              isInterested
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-orange-600 hover:bg-orange-700 text-white'
+            ]">
+              <Heart :class="[
+                'w-5 h-5 mr-2 transition-transform duration-200',
+                isInterested ? 'fill-current' : ''
+              ]" />
               <span v-if="loading">Procesando...</span>
               <span v-else-if="isInterested">Ya no me interesa</span>
               <span v-else>Me gustaría asistir</span>
             </button>
-            
+
             <div class="flex items-center text-gray-400 text-sm">
               <Users class="w-4 h-4 mr-2" />
-              <span>{{ interestedCount }} persona{{ interestedCount !== 1 ? 's' : '' }} interesada{{ interestedCount !== 1 ? 's' : '' }}</span>
+              <span>{{ interestedCount }} persona{{ interestedCount !== 1 ? 's' : '' }} interesada{{ interestedCount !==
+                1 ? 's' : '' }}</span>
             </div>
           </div>
         </div>
 
         <!-- Pricing Section -->
-        <div v-if="event.price_range || event.active_price || (event.formatted_prices && event.formatted_prices.length > 0)" class="card mb-6">
+        <div
+          v-if="event.price_range || event.active_price || (event.formatted_prices && event.formatted_prices.length > 0)"
+          class="card mb-6">
           <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
             <div class="w-6 h-6 bg-orange-500 rounded-sm flex items-center justify-center mr-3" aria-hidden="true">
               <span class="text-white font-bold text-sm">💰</span>
             </div>
             Precios de Entrada
           </h2>
-          
+
           <div class="space-y-4">
             <!-- Price Range Display -->
             <div v-if="event.price_range" class="bg-gray-700 rounded-lg p-4">
@@ -128,7 +118,7 @@
                 <span class="text-xl font-bold text-orange-400">{{ event.price_range }}</span>
               </div>
             </div>
-            
+
             <!-- Active Price Display -->
             <div v-else-if="event.active_price" class="bg-gray-700 rounded-lg p-4">
               <div class="flex items-center justify-between">
@@ -137,31 +127,29 @@
                   <p class="text-sm text-gray-400">Precio actual</p>
                 </div>
                 <span class="text-xl font-bold text-orange-400">
-                  {{ event.active_price.price === 0 ? 'Gratis' : `$${event.active_price.price.toLocaleString('es-CL')}` }}
+                  {{ event.active_price.price === 0 ? 'Gratis' : `$${event.active_price.price.toLocaleString('es-CL')}`
+                  }}
                 </span>
               </div>
             </div>
-            
+
             <!-- All Prices Display -->
             <div v-if="event.formatted_prices && event.formatted_prices.length > 0" class="space-y-3">
-              <div 
-                v-for="(price, index) in event.formatted_prices" 
-                :key="index"
-                :class="[
-                  'bg-gray-700 rounded-lg p-4 border-2 transition-colors duration-200',
-                  price.active ? 'border-orange-500 bg-orange-500/10' : 'border-transparent hover:border-gray-600'
-                ]"
-              >
+              <div v-for="(price, index) in event.formatted_prices" :key="index" :class="[
+                'bg-gray-700 rounded-lg p-4 border-2 transition-colors duration-200',
+                price.active ? 'border-orange-500 bg-orange-500/10' : 'border-transparent hover:border-gray-600'
+              ]">
                 <div class="flex items-center justify-between">
                   <div>
                     <span class="text-lg font-medium text-white">{{ price.name }}</span>
-                    <span v-if="price.active" class="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">Actual</span>
+                    <span v-if="price.active"
+                      class="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">Actual</span>
                   </div>
                   <span class="text-xl font-bold text-orange-400">{{ price.formatted_price }}</span>
                 </div>
               </div>
             </div>
-            
+
             <!-- No Prices Available -->
             <div v-else class="text-center py-8">
               <div class="text-gray-400">
@@ -179,16 +167,9 @@
             Personas Interesadas ({{ interestedCount }})
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div 
-              v-for="user in interestedUsers" 
-              :key="user.id"
-              class="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200"
-            >
-              <img
-                :src="user.avatar_url"
-                :alt="`Avatar de ${user.name}`"
-                class="w-10 h-10 rounded-full object-cover"
-              />
+            <div v-for="user in interestedUsers" :key="user.id"
+              class="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+              <img :src="user.avatar_url" :alt="`Avatar de ${user.name}`" class="w-10 h-10 rounded-full object-cover" />
               <div class="flex-1 min-w-0">
                 <p class="text-white font-medium truncate">{{ user.name }}</p>
                 <p class="text-gray-400 text-sm">
@@ -209,31 +190,21 @@
             <address class="text-gray-300 ml-7 not-italic" itemprop="address">{{ event.address }}</address>
             <meta itemprop="latitude" :content="event.latitude?.toString()" />
             <meta itemprop="longitude" :content="event.longitude?.toString()" />
-            
+
             <!-- Venue Link -->
             <div v-if="event.venue" class="mt-4">
-              <NuxtLink
-                :to="`/venues/${event.venue.id}`"
-                class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-              >
+              <NuxtLink :to="`/venues/${event.venue.id}`"
+                class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
                 <MapPin class="w-4 h-4 mr-2" />
                 Ver Venue: {{ event.venue.name }}
               </NuxtLink>
             </div>
           </div>
           <div class="rounded-lg overflow-hidden h-64">
-            <MapLeaflet
-              v-if="event.latitude && event.longitude"
-              :lat="event.latitude"
-              :lng="event.longitude"
-              :aria-label="`Mapa mostrando la ubicación del evento en ${event.location}`"
-            />
-            <div
-              v-else
-              class="bg-gray-700 text-center text-gray-400 py-10 rounded-lg"
-              role="img"
-              aria-label="Ubicación no disponible en el mapa"
-            >
+            <MapLeaflet v-if="event.latitude && event.longitude" :lat="event.latitude" :lng="event.longitude"
+              :aria-label="`Mapa mostrando la ubicación del evento en ${event.location}`" />
+            <div v-else class="bg-gray-700 text-center text-gray-400 py-10 rounded-lg" role="img"
+              aria-label="Ubicación no disponible en el mapa">
               Ubicación no disponible
             </div>
           </div>
@@ -243,10 +214,8 @@
       <aside class="space-y-6">
         <div class="card">
           <div class="flex space-x-2">
-            <button
-              class="btn-secondary flex-1 flex items-center justify-center"
-              aria-label="Compartir evento en redes sociales"
-            >
+            <button class="btn-secondary flex-1 flex items-center justify-center"
+              aria-label="Compartir evento en redes sociales">
               <Share2 class="w-4 h-4 mr-2" aria-hidden="true" />
               Compartir
             </button>
@@ -288,18 +257,33 @@
         <div v-if="event.organizer" class="card">
           <h3 class="text-lg font-semibold text-white mb-4">Organizador</h3>
           <div class="flex items-center space-x-3" itemprop="organizer" itemscope itemtype="https://schema.org/Person">
-            <img
-              :src="event.organizer.avatar_url"
-              :alt="`Foto de perfil de ${event.organizer.name}`"
-              class="w-12 h-12 rounded-full object-cover"
-              itemprop="image"
-            />
+            <img :src="event.organizer.avatar_url" :alt="`Foto de perfil de ${event.organizer.name}`"
+              class="w-12 h-12 rounded-full object-cover" itemprop="image" />
             <div>
               <h4 class="font-medium text-white" itemprop="name">{{ event.organizer.name }}</h4>
               <p class="text-sm text-gray-400">
                 Miembro desde {{ event.organizer.member_since }}
               </p>
             </div>
+          </div>
+        </div>
+        <!-- Venue Card -->
+        <div v-if="event.venue" class="card">
+          <h3 class="text-lg font-semibold text-white mb-4">Venue</h3>
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center">
+              <MapPin class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex-1">
+              <h4 class="font-medium text-white">{{ event.venue.name }}</h4>
+              <p class="text-sm text-gray-400">{{ event.venue.address || event.location }}</p>
+            </div>
+            <NuxtLink 
+              :to="`/venues/${event.venue.id}`"
+              class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            >
+              Ver Venue
+            </NuxtLink>
           </div>
         </div>
 
@@ -315,11 +299,8 @@
 
     <div v-if="event === null && !isLoading" class="text-center py-12" role="alert">
       <div class="text-gray-400 text-lg">Evento no encontrado</div>
-      <NuxtLink
-        to="/events"
-        class="text-orange-500 hover:text-orange-400 mt-2 inline-block"
-        aria-label="Volver a la lista de eventos"
-      >
+      <NuxtLink to="/events" class="text-orange-500 hover:text-orange-400 mt-2 inline-block"
+        aria-label="Volver a la lista de eventos">
         Volver a eventos
       </NuxtLink>
     </div>
@@ -372,7 +353,7 @@ const fetchEvent = async () => {
   imageLoadFailed.value = false; // Reset image error state
   try {
     event.value = await getEventById(eventId);
-    
+
     // Load interest data
     if (event.value) {
       await Promise.all([
@@ -414,7 +395,7 @@ const formatDate = (dateString: string) => {
 // Structured data for the event
 const structuredData = computed(() => {
   if (!event.value) return null;
-  
+
   return {
     "@context": "https://schema.org",
     "@type": "Event",
