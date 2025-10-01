@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Custom Pricing - Underground Venues</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1f2937;
+            color: white;
+        }
+        .test-section {
+            background-color: #374151;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #065f46;
+            color: #d1fae5;
+        }
+        .error {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+        .info {
+            background-color: #1e3a8a;
+            color: #dbeafe;
+        }
+        button {
+            background-color: #ea580c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #c2410c;
+        }
+        .price-tier {
+            background-color: #4b5563;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #6b7280;
+        }
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tier-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .tier-description {
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #6b7280;
+            border-radius: 4px;
+            background-color: #374151;
+            color: white;
+        }
+        .active-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background-color: #6b7280;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle.active {
+            background-color: #ea580c;
+        }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        .toggle.active::after {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Custom Pricing Functionality</h1>
+    
+    <div class="test-section">
+        <h2>Custom Price Tiers Test</h2>
+        <p>This test simulates the custom pricing functionality from the create event page.</p>
+        
+        <div id="price-tiers-container">
+            <div class="test-result info">
+                No hay niveles de precio. Haz clic en "Agregar Nivel" para crear tu primer nivel de precio.
+            </div>
+        </div>
+        
+        <button onclick="addPriceTier()">+ Agregar Nivel</button>
+        <button onclick="testFormSubmission()">Probar Envío de Formulario</button>
+        <button onclick="clearAllTiers()">Limpiar Todos</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        let priceTierIdCounter = 0;
+        let priceTiers = [];
+
+        function addPriceTier() {
+            const newTier = {
+                id: `tier_${++priceTierIdCounter}`,
+                name: '',
+                price: 0,
+                description: '',
+                active: priceTiers.length === 0
+            };
+            
+            priceTiers.push(newTier);
+            renderPriceTiers();
+            logTest('Nuevo nivel de precio agregado', 'success');
+        }
+
+        function removePriceTier(index) {
+            priceTiers.splice(index, 1);
+            
+            // If we removed the active tier, make the first remaining tier active
+            if (priceTiers.length > 0 && !priceTiers.some(tier => tier.active)) {
+                priceTiers[0].active = true;
+            }
+            
+            renderPriceTiers();
+            logTest(`Nivel de precio ${index + 1} eliminado`, 'success');
+        }
+
+        function setActiveTier(index) {
+            // Deactivate all other tiers
+            priceTiers.forEach((tier, i) => {
+                tier.active = i === index;
+            });
+            
+            renderPriceTiers();
+            logTest(`Nivel ${index + 1} marcado como activo`, 'success');
+        }
+
+        function updateTierField(index, field, value) {
+            priceTiers[index][field] = value;
+            logTest(`Campo ${field} actualizado en nivel ${index + 1}`, 'info');
+        }
+
+        function renderPriceTiers() {
+            const container = document.getElementById('price-tiers-container');
+            
+            if (priceTiers.length === 0) {
+                container.innerHTML = `
+                    <div class="test-result info">
+                        No hay niveles de precio. Haz clic en "Agregar Nivel" para crear tu primer nivel de precio.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = priceTiers.map((tier, index) => `
+                <div class="price-tier">
+                    <div class="tier-header">
+                        <h4>Nivel ${index + 1}</h4>
+                        <button onclick="removePriceTier(${index})" style="background-color: #dc2626;">Eliminar</button>
+                    </div>
+                    
+                    <div class="tier-fields">
+                        <div>
+                            <label>Nombre del Nivel</label>
+                            <input 
+                                type="text" 
+                                placeholder="Ej: General, VIP, Estudiantil"
+                                value="${tier.name}"
+                                onchange="updateTierField(${index}, 'name', this.value)"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label>Precio ($)</label>
+                            <input 
+                                type="number" 
+                                min="0" 
+                                step="0.01"
+                                value="${tier.price}"
+                                onchange="updateTierField(${index}, 'price', parseFloat(this.value))"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div class="tier-description">
+                        <label>Descripción (Opcional)</label>
+                        <textarea 
+                            placeholder="Ej: Incluye una bebida, Acceso a área VIP, Descuento para estudiantes"
+                            onchange="updateTierField(${index}, 'description', this.value)"
+                        >${tier.description}</textarea>
+                    </div>
+                    
+                    <div class="active-toggle">
+                        <span>Precio Activo</span>
+                        <div 
+                            class="toggle ${tier.active ? 'active' : ''}"
+                            onclick="setActiveTier(${index})"
+                        ></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function testFormSubmission() {
+            if (priceTiers.length === 0) {
+                logTest('No hay niveles de precio para enviar', 'error');
+                return;
+            }
+
+            // Validate tiers
+            const invalidTiers = priceTiers.filter(tier => !tier.name || tier.price <= 0);
+            if (invalidTiers.length > 0) {
+                logTest('Algunos niveles tienen datos inválidos', 'error');
+                return;
+            }
+
+            // Simulate form submission
+            const formData = {
+                show_prices: true,
+                currency: 'USD',
+                prices: priceTiers.map(tier => ({
+                    name: tier.name,
+                    price: parseFloat(tier.price),
+                    currency: 'USD',
+                    active: tier.active,
+                    info: tier.description || undefined
+                }))
+            };
+
+            logTest('Datos del formulario preparados:', 'info');
+            logTest(JSON.stringify(formData, null, 2), 'info');
+            
+            // Count active tiers
+            const activeTiers = priceTiers.filter(tier => tier.active);
+            logTest(`Niveles activos: ${activeTiers.length}`, 'success');
+            
+            // Validate only one active tier
+            if (activeTiers.length !== 1) {
+                logTest('Advertencia: Debe haber exactamente un nivel activo', 'error');
+            } else {
+                logTest('✓ Validación exitosa: Un solo nivel activo', 'success');
+            }
+        }
+
+        function clearAllTiers() {
+            priceTiers = [];
+            priceTierIdCounter = 0;
+            renderPriceTiers();
+            logTest('Todos los niveles eliminados', 'success');
+        }
+
+        function logTest(message, type) {
+            const resultsContainer = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultsContainer.appendChild(resultDiv);
+            resultsContainer.scrollTop = resultsContainer.scrollHeight;
+        }
+
+        // Initialize
+        renderPriceTiers();
+        logTest('Test de precios personalizados iniciado', 'info');
+    </script>
+</body>
+</html>

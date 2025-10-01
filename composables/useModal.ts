@@ -6,10 +6,9 @@ export const useModal = () => {
     type: 'info' as 'success' | 'error' | 'warning' | 'info',
     showCancel: false,
     confirmText: 'Aceptar',
-    cancelText: 'Cancelar'
+    cancelText: 'Cancelar',
+    onConfirm: null as (() => void) | null
   }));
-
-  let _onConfirm = () => {};
 
   const showModal = (options: {
     title: string;
@@ -20,7 +19,6 @@ export const useModal = () => {
     cancelText?: string;
     onConfirm?: () => void;
   }) => {
-    _onConfirm = options.onConfirm || (() => {});
     modalState.value = {
       show: true,
       title: options.title,
@@ -28,7 +26,8 @@ export const useModal = () => {
       type: options.type || 'info',
       showCancel: options.showCancel || false,
       confirmText: options.confirmText || 'Aceptar',
-      cancelText: options.cancelText || 'Cancelar'
+      cancelText: options.cancelText || 'Cancelar',
+      onConfirm: options.onConfirm || null
     };
   };
 
@@ -37,7 +36,13 @@ export const useModal = () => {
   };
 
   const triggerConfirm = () => {
-    _onConfirm();
+    try {
+      if (modalState.value.onConfirm) {
+        modalState.value.onConfirm();
+      }
+    } catch (error) {
+      console.error('Error executing onConfirm:', error);
+    }
   };
 
   const showSuccess = (title: string, message: string) => {

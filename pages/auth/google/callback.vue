@@ -3,16 +3,17 @@ import type { User } from '~/composables/types/types';  // Ajustá ruta según c
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '~/store/user';
 import { useCookie, useRuntimeConfig } from '#app';
+import { useApiClient } from '~/composables/useApiClient';
 
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
 const userStore = useUserStore();
 const token = useCookie('token');
+const { setTokenExpiration } = useApiClient();
 
 onMounted(async () => {
   const tokenFromQuery = route.query.token as string | undefined;
-  console.log('Query params completos del callback:', route.query);
 
   if (!tokenFromQuery) {
     console.error('Token no proporcionado');
@@ -55,6 +56,11 @@ onMounted(async () => {
       joinedAt: user.joinedAt ?? '',
     });
     userStore.setToken(tokenFromQuery);
+    
+    // Set default token expiration (1 hour) for Google OAuth
+    // Note: Google OAuth doesn't provide expires_in, so we use a default
+    setTokenExpiration(3600); // 1 hour in seconds
+    
     return router.push('/');
   } catch (e) {
     console.error('Error al obtener datos de usuario desde API:', e);

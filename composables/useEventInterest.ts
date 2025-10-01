@@ -49,8 +49,6 @@ export const useEventInterest = () => {
     try {
       loading.value = true
       const url = `${baseUrl}/api/events/${eventId}/toggle-interest`
-      console.log('Toggle interest URL:', url)
-      console.log('Base URL:', baseUrl)
       const response = await fetch(url, {
         method: 'POST',
         headers: {

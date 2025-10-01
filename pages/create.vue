@@ -240,11 +240,37 @@
             </div>
           </section>
 
+          <!-- Artistas -->
+          <section class="card" aria-labelledby="artists-heading">
+            <h2 id="artists-heading" class="text-xl font-semibold text-white mb-6 flex items-center">
+              <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3" aria-hidden="true">
+                <span class="text-white font-bold">5</span>
+              </div>
+              Artistas del Evento
+            </h2>
+            
+            <div class="space-y-4">
+              <p class="text-sm text-gray-400">
+                Asigna tus propios perfiles de artista a este evento. Solo puedes asignar artistas que te pertenecen.
+              </p>
+              
+              <ArtistSelector v-model="form.artists" />
+              
+              <div v-if="form.artists.length === 0" class="p-4 bg-gray-700 rounded-lg text-center">
+                <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <p class="text-gray-400">No hay artistas asignados</p>
+                <p class="text-sm text-gray-500 mt-1">Agrega artistas para mostrar quién participará en el evento</p>
+              </div>
+            </div>
+          </section>
+
           <!-- Precios -->
           <section class="card" aria-labelledby="pricing-heading">
             <h2 id="pricing-heading" class="text-xl font-semibold text-white mb-6 flex items-center">
               <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3" aria-hidden="true">
-                <span class="text-white font-bold">5</span>
+                <span class="text-white font-bold">6</span>
               </div>
               Precios
             </h2>
@@ -253,7 +279,7 @@
               <!-- Publicar Precios Toggle -->
               <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                 <div>
-                  <h3 class="text-lg font-medium text-white mb-1">Publicar Precios</h3>
+                  <h3 class="text-lg font-medium text-white mb-1">Monetización</h3>
                   <p class="text-sm text-gray-400">Permite a los usuarios ver los precios del evento</p>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -270,85 +296,6 @@
 
               <!-- Precios del Evento -->
               <div v-if="form.show_prices" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Precio General -->
-                  <div>
-                    <label for="general-price" class="block text-sm font-medium text-gray-300 mb-2">
-                      Precio General ({{ currencyName }})
-                    </label>
-                    <div class="relative">
-                      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
-                      <input 
-                        id="general-price"
-                        v-model="form.general_price" 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        :placeholder="currencyPlaceholder" 
-                        class="input-field w-full pl-8" 
-                        aria-describedby="general-price-help"
-                      />
-                    </div>
-                    <p id="general-price-help" class="text-xs text-gray-500 mt-1">Precio estándar para el evento</p>
-                  </div>
-
-                  <!-- Precio VIP -->
-                  <div>
-                    <label for="vip-price" class="block text-sm font-medium text-gray-300 mb-2">
-                      Precio VIP (Opcional) ({{ currencyName }})
-                    </label>
-                    <div class="relative">
-                      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
-                      <input 
-                        id="vip-price"
-                        v-model="form.vip_price" 
-                        type="number" 
-                        min="0" 
-                        step="0.01"
-                        :placeholder="currencyPlaceholder" 
-                        class="input-field w-full pl-8"
-                        aria-describedby="vip-price-help"
-                      />
-                    </div>
-                    <p id="vip-price-help" class="text-xs text-gray-500 mt-1">Precio especial para área VIP</p>
-                  </div>
-                </div>
-
-                <!-- Precio Estudiantil -->
-                <div>
-                  <label for="student-price" class="block text-sm font-medium text-gray-300 mb-2">
-                    Precio Estudiantil (Opcional) ({{ currencyName }})
-                  </label>
-                  <div class="relative">
-                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
-                    <input 
-                      id="student-price"
-                      v-model="form.student_price" 
-                      type="number" 
-                      min="0" 
-                      step="0.01"
-                      :placeholder="currencyPlaceholder" 
-                      class="input-field w-full pl-8"
-                      aria-describedby="student-price-help"
-                    />
-                  </div>
-                  <p id="student-price-help" class="text-xs text-gray-500 mt-1">Descuento para estudiantes con credencial</p>
-                </div>
-
-                <!-- Información de Precios -->
-                <div>
-                  <label for="pricing-info" class="block text-sm font-medium text-gray-300 mb-2">Información Adicional de Precios</label>
-                  <textarea 
-                    id="pricing-info"
-                    v-model="form.pricing_info" 
-                    rows="3" 
-                    placeholder="Ej: Incluye una bebida, Descuento por compra anticipada, etc." 
-                    class="input-field w-full resize-none"
-                    aria-describedby="pricing-info-help"
-                  ></textarea>
-                  <p id="pricing-info-help" class="text-xs text-gray-500 mt-1">Información adicional sobre precios, descuentos o promociones</p>
-                </div>
-
                 <!-- Moneda -->
                 <div>
                   <label for="currency" class="block text-sm font-medium text-gray-300 mb-2">
@@ -369,6 +316,114 @@
                     <option value="PEN">PEN - Sol Peruano</option>
                   </select>
                   <p id="currency-help" class="text-xs text-gray-500 mt-1">Selecciona la moneda para los precios</p>
+                </div>
+
+                <!-- Custom Price Tiers -->
+                <div>
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-white">Niveles de Precio</h3>
+                    <button 
+                      type="button"
+                      @click="addPriceTier"
+                      class="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                    >
+                      <Plus class="w-4 h-4 mr-1" />
+                      Agregar Nivel
+                    </button>
+                  </div>
+
+                  <div v-if="form.priceTiers.length === 0" class="text-center py-8 text-gray-400">
+                    <div class="text-lg mb-2">No hay niveles de precio</div>
+                    <div class="text-sm">Haz clic en "Agregar Nivel" para crear tu primer nivel de precio</div>
+                  </div>
+
+                  <div v-else class="space-y-4">
+                    <div 
+                      v-for="(tier, index) in form.priceTiers" 
+                      :key="tier.id"
+                      class="bg-gray-700 rounded-lg p-4 border border-gray-600"
+                    >
+                      <div class="flex items-start justify-between mb-4">
+                        <h4 class="text-white font-medium">Nivel {{ index + 1 }}</h4>
+                        <button 
+                          type="button"
+                          @click="removePriceTier(index)"
+                          class="text-red-400 hover:text-red-300 transition-colors duration-200"
+                          :aria-label="`Eliminar nivel ${index + 1}`"
+                        >
+                          <Trash2 class="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Tier Name -->
+                        <div>
+                          <label :for="`tier-name-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
+                            Nombre del Nivel
+                          </label>
+                          <input 
+                            :id="`tier-name-${index}`"
+                            v-model="tier.name"
+                            type="text" 
+                            placeholder="Ej: General, VIP, Estudiantil"
+                            class="input-field w-full"
+                            required
+                          />
+                        </div>
+
+                        <!-- Tier Price -->
+                        <div>
+                          <label :for="`tier-price-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
+                            Precio ({{ currencySymbol }})
+                          </label>
+                          <div class="relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
+                            <input 
+                              :id="`tier-price-${index}`"
+                              v-model="tier.price"
+                              type="number" 
+                              min="0" 
+                              step="0.01"
+                              :placeholder="currencyPlaceholder" 
+                              class="input-field w-full pl-8"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Tier Description -->
+                      <div class="mt-4">
+                        <label :for="`tier-description-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
+                          Descripción (Opcional)
+                        </label>
+                        <textarea 
+                          :id="`tier-description-${index}`"
+                          v-model="tier.description"
+                          rows="2" 
+                          placeholder="Ej: Incluye una bebida, Acceso a área VIP, Descuento para estudiantes"
+                          class="input-field w-full resize-none"
+                        ></textarea>
+                      </div>
+
+                      <!-- Active Toggle -->
+                      <div class="mt-4 flex items-center justify-between">
+                        <div>
+                          <span class="text-sm font-medium text-gray-300">Precio Activo</span>
+                          <p class="text-xs text-gray-500">Este será el precio mostrado como principal</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            v-model="tier.active"
+                            type="checkbox" 
+                            class="sr-only peer"
+                            @change="setActiveTier(index)"
+                          />
+                          <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -409,16 +464,19 @@
 
 <script setup lang="ts">
 definePageMeta({
-  ssr: false
+  ssr: false,
+  middleware: 'auth'
 });
 
 import MapSelector from '~/components/MapSelector.vue';
-import { Upload, X, Calendar } from 'lucide-vue-next';
+import ArtistSelector from '~/components/ArtistSelector.vue';
+import { Upload, X, Calendar, Plus, Trash2 } from 'lucide-vue-next';
 import { reactive, ref, watch } from 'vue';
 import { useEvents } from '~/composables/useEvents';
 import { useModal } from '~/composables/useModal';
 import { useUserStore } from '~/store/user';
 import { useRouter } from 'vue-router';
+import type { Artist } from '~/composables/types/types';
 
 const router = useRouter();
 const { isAuthenticated } = useAuth();
@@ -431,6 +489,15 @@ if (!isAuthenticated.value) {
   router.push('/events');
 }
   */
+
+// Price tier interface
+interface PriceTier {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  active: boolean;
+}
 
 const form = reactive({
   name: '',
@@ -448,12 +515,11 @@ const form = reactive({
   information_links: '',
   publish_date: '',
   category: 'Música',
+  // Artists field
+  artists: [] as Artist[],
   // Pricing fields
   show_prices: false,
-  general_price: '',
-  vip_price: '',
-  student_price: '',
-  pricing_info: '',
+  priceTiers: [] as PriceTier[],
   currency: 'USD',
 });
 
@@ -510,6 +576,35 @@ const isSubmitting = ref(false);
 const selectedFile = ref<File | null>(null);
 const imagePreview = ref(form.image || '');
 
+// Price tier management
+let priceTierIdCounter = 0;
+
+const addPriceTier = () => {
+  const newTier: PriceTier = {
+    id: `tier_${++priceTierIdCounter}`,
+    name: '',
+    price: 0,
+    description: '',
+    active: form.priceTiers.length === 0 // First tier is active by default
+  };
+  form.priceTiers.push(newTier);
+};
+
+const removePriceTier = (index: number) => {
+  form.priceTiers.splice(index, 1);
+  // If we removed the active tier, make the first remaining tier active
+  if (form.priceTiers.length > 0 && !form.priceTiers.some(tier => tier.active)) {
+    form.priceTiers[0].active = true;
+  }
+};
+
+const setActiveTier = (index: number) => {
+  // Deactivate all other tiers
+  form.priceTiers.forEach((tier, i) => {
+    tier.active = i === index;
+  });
+};
+
 
 const onImageSelected = (e: Event) => {
   const input = e.target as HTMLInputElement;
@@ -562,14 +657,26 @@ const createEventHandler = async () => {
     // status_id and commune_id are handled internally by the system
     formData.append('category', form.category);
 
+    // Artists data
+    form.artists.forEach(artist => {
+      formData.append('artists[]', artist.id.toString());
+    });
+
     // Pricing data
     formData.append('show_prices', form.show_prices ? '1' : '0');
     if (form.show_prices) {
-      if (form.general_price) formData.append('general_price', form.general_price);
-      if (form.vip_price) formData.append('vip_price', form.vip_price);
-      if (form.student_price) formData.append('student_price', form.student_price);
-      if (form.pricing_info) formData.append('pricing_info', form.pricing_info);
       formData.append('currency', form.currency);
+      
+      // Convert price tiers to the format expected by the API
+      const prices = form.priceTiers.map(tier => ({
+        name: tier.name,
+        price: parseFloat(tier.price.toString()),
+        currency: form.currency,
+        active: tier.active,
+        info: tier.description || undefined
+      }));
+      
+      formData.append('prices', JSON.stringify(prices));
     }
 
     if (selectedFile.value) {
@@ -578,14 +685,15 @@ const createEventHandler = async () => {
       formData.append('image_url', form.image);
     }
 
-    await createEvent(formData);
+    const createdEvent = await createEvent(formData);
 
     useModal().showSuccess(
       '¡Evento creado exitosamente!',
-      `${form.name} ha sido creado y ${form.hidden_location ? 'la ubicación se revelará según configuraste.' : 'está disponible para todos.'}`
+      `${form.name} ha sido creado. Ahora puedes invitar artistas a participar.`
     );
 
-    router.push('/events');
+    // Redirect to invitation page
+    router.push(`/events/${createdEvent.id}/invite`);
   } catch (error) {
     console.error(error);
     useModal().showError('Error al crear evento', 'Por favor verifica los datos e inténtalo de nuevo.');

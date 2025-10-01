@@ -42,7 +42,6 @@ async function getMyLocation() {
   } catch (error) {
     getLocationFromIP()
       .then((location) => {
-        console.log("Ubicación por IP:", location);
         if (location) {
           userLatitude.value = location.coords.latitude;
           userLongitude.value = location.coords.longitude;
@@ -209,7 +208,6 @@ const props = withDefaults(defineProps<Props>(), {
 watch(
   () => props.events,
   (newEvents) => {
-    console.log("Watch triggered with events:", newEvents); // Debug log
 
     addEventMarkers(newEvents);
   },

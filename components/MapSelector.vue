@@ -56,6 +56,7 @@ import {
   watch,
   defineProps,
   defineEmits,
+  nextTick,
 } from "vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -87,44 +88,132 @@ let map: L.Map;
 let marker: L.Marker | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
+let isInitializing = false;
 
-onMounted(() => {
+onMounted(async () => {
   if (typeof window === "undefined") return;
+
+  // Wait for DOM to be ready
+  await nextTick();
+
+  let mapInitialized = false;
+
+  // Fallback timeout to ensure map gets initialized
+  const fallbackTimeout = setTimeout(() => {
+    if (!mapInitialized) {
+      const lat = props.modelValue?.lat ?? -33.4489;
+      const lng = props.modelValue?.lng ?? -70.6693;
+      initializeMap(lat, lng);
+      mapInitialized = true;
+    }
+  }, 3000); // 3 second timeout
 
   // Usar ubicación del usuario si es posible
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        initializeMap(position.coords.latitude, position.coords.longitude);
+      async (position) => {
+        if (!mapInitialized) {
+          clearTimeout(fallbackTimeout);
+          await nextTick(); // Ensure DOM is ready
+          initializeMap(position.coords.latitude, position.coords.longitude);
+          mapInitialized = true;
+        }
       },
-      () => {
-        // Si falla la geolocalización, usar ubicación por defecto o props
-        const lat = props.modelValue?.lat ?? -33.4489;
-        const lng = props.modelValue?.lng ?? -70.6693;
-        initializeMap(lat, lng);
+      async () => {
+        if (!mapInitialized) {
+          clearTimeout(fallbackTimeout);
+          // Si falla la geolocalización, usar ubicación por defecto o props
+          await nextTick(); // Ensure DOM is ready
+          const lat = props.modelValue?.lat ?? -33.4489;
+          const lng = props.modelValue?.lng ?? -70.6693;
+          initializeMap(lat, lng);
+          mapInitialized = true;
+        }
+      },
+      {
+        timeout: 2000, // 2 second timeout for geolocation
+        enableHighAccuracy: false // Faster response
       }
     );
   } else {
+    clearTimeout(fallbackTimeout);
+    await nextTick(); // Ensure DOM is ready
     const lat = props.modelValue?.lat ?? -33.4489;
     const lng = props.modelValue?.lng ?? -70.6693;
     initializeMap(lat, lng);
+    mapInitialized = true;
   }
 });
 
 function initializeMap(lat: number, lng: number) {
+  // Prevent multiple simultaneous initializations
+  if (isInitializing) {
+    return;
+  }
+
+  // Check if the map container exists
+  const mapContainer = document.getElementById("map");
+  if (!mapContainer) {
+    console.error("Map container not found. DOM may not be ready yet.");
+    return;
+  }
+
+  isInitializing = true;
+
+  // Check if map is already initialized and clean it up properly
+  if (map) {
+    try {
+      map.remove();
+      map = null as any;
+    } catch (error) {
+      console.warn("Error removing existing map:", error);
+    }
+  }
+
+  // Clear any existing map data from the container
+  mapContainer.innerHTML = '';
+
   selectedLat.value = lat;
   selectedLng.value = lng;
 
-  map = L.map("map").setView([lat, lng], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(map);
+  try {
+    map = L.map("map").setView([lat, lng], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
 
-  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-  marker.on("dragend", onMarkerDrag);
-  map.on("click", onMapClick);
+    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    marker.on("dragend", onMarkerDrag);
+    map.on("click", onMapClick);
 
-  emit("update:modelValue", { lat, lng });
+    emit("update:modelValue", { lat, lng });
+    isInitializing = false;
+  } catch (error) {
+    console.error("Error initializing map:", error);
+    isInitializing = false;
+    // If map initialization fails, try again after a short delay
+    setTimeout(() => {
+      if (!isInitializing) {
+        isInitializing = true;
+        try {
+          map = L.map("map").setView([lat, lng], 13);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors",
+          }).addTo(map);
+
+          marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+          marker.on("dragend", onMarkerDrag);
+          map.on("click", onMapClick);
+
+          emit("update:modelValue", { lat, lng });
+          isInitializing = false;
+        } catch (retryError) {
+          console.error("Failed to initialize map after retry:", retryError);
+          isInitializing = false;
+        }
+      }
+    }, 100);
+  }
 }
 
 function onMapClick(e: L.LeafletMouseEvent) {
@@ -260,8 +349,26 @@ onBeforeUnmount(() => {
     clearTimeout(hideTimer);
     hideTimer = null;
   }
+  
+  // Clean up map properly
   if (map) {
-    map.remove();
+    try {
+      map.remove();
+      map = null as any;
+    } catch (error) {
+      console.warn("Error removing map on unmount:", error);
+    }
+  }
+  
+  // Clear marker reference
+  if (marker) {
+    marker = null;
+  }
+  
+  // Clear the map container
+  const mapContainer = document.getElementById("map");
+  if (mapContainer) {
+    mapContainer.innerHTML = '';
   }
 });
 

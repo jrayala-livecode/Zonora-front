@@ -369,6 +369,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth'
+});
+
 import { ref, reactive, onMounted, computed, watch } from 'vue';
 import { Trash2, ArrowLeft, X, Upload } from 'lucide-vue-next';
 import { useRuntimeConfig, useCookie } from '#app';

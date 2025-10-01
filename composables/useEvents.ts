@@ -1,6 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { useRuntimeConfig } from '#app';
-import { useUserStore } from '~/store/user'; // importa tu store
+import { useUserStore } from '~/store/user';
+import { useApiClient } from '~/composables/useApiClient'; // importa tu store
 import type { Venue } from './useVenue'; // Asegúrate de que la ruta sea correcta
 
 export interface Organizer {
@@ -25,6 +26,12 @@ export interface Event {
   longitude?: number;
   organizer?: Organizer;
   venue: Venue | null;
+  artists?: Array<{
+    id: number;
+    stage_name: string;
+    profile_picture_url?: string;
+    genres?: string[];
+  }>;
   prices?: Array<{
     name: string;
     price: number;
@@ -56,7 +63,21 @@ export interface PaginatedEvents {
 }
 
 function mapApiEventToEvent(apiEvent: any): Event {
-  const dateObj = new Date(apiEvent.date);
+  if (!apiEvent) {
+    console.error('mapApiEventToEvent: apiEvent is null/undefined');
+    return {
+      id: '',
+      title: 'Evento no disponible',
+      description: 'Sin descripción',
+      date: '',
+      location: 'Ubicación no disponible',
+      image_url: '',
+      venue: null,
+      organizer: undefined
+    };
+  }
+
+  const dateObj = new Date(apiEvent.date || '');
   const date = dateObj.toISOString().split('T')[0];
   const time = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
@@ -153,6 +174,7 @@ export const useEvents = () => {
 
   const userStore = useUserStore(); // instancia del store
   const token = computed(() => userStore.token); // accede de forma reactiva
+  const { apiRequest } = useApiClient();
   const userPosition = ref<{ lat: number, lng: number } | null>(null);
   const useCurrentLocation = ref(false); // si el usuario elige esta opción
   const distanceThresholdKm = 20; // distancia máxima para considerar "cerca"
@@ -197,8 +219,14 @@ export const useEvents = () => {
       if (!res.ok) throw new Error('Error fetching events');
 
       const json = await res.json();
-      const apiEvents = json.data.data;
-      events.value = apiEvents.map(mapApiEventToEvent);
+        if (!json.data || !json.data.data || !Array.isArray(json.data.data)) {
+          console.error('Invalid API response structure:', json);
+          events.value = [];
+          return;
+        }
+        
+        const apiEvents = json.data.data;
+        events.value = apiEvents.map(mapApiEventToEvent);
     } catch (error) {
       console.error('Error al obtener eventos:', error);
       events.value = [];
@@ -217,7 +245,6 @@ export const useEvents = () => {
 
       json.data.data = json.data.data.map(mapApiEventToEvent);
 
-      console.log('Eventos paginados obtenidos:', json.data);
 
       paginatedEvents.value = json.data;
       
@@ -229,15 +256,12 @@ export const useEvents = () => {
   };
 
   const createEvent = async (eventData: FormData | any) => {
-    console.log('Token desde el store en create events:', token.value);
     try {
-      const res = await fetch(`${config.public.apiBaseUrl}/events`, {
+      const res = await apiRequest('/events', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token.value}`,
           'Accept': 'application/json'
         },
-
         body: eventData instanceof FormData ? eventData : JSON.stringify(eventData)
       });
 

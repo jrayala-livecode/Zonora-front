@@ -11,10 +11,12 @@
           Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.
         </p>
         <nav class="flex flex-col sm:flex-row gap-3 justify-center" aria-label="Navegación principal">
-          <NuxtLink to="/events" class="btn-primary text-sm px-6 py-3 animate-pulse" aria-label="Explorar todos los eventos disponibles">
+          <NuxtLink to="/events" class="btn-primary text-sm px-6 py-3 animate-pulse"
+            aria-label="Explorar todos los eventos disponibles">
             Explorar Eventos
           </NuxtLink>
-          <NuxtLink v-if="isAuthenticated" to="/create" class="btn-secondary text-sm px-6 py-3" aria-label="Crear un nuevo evento">
+          <NuxtLink v-if="isAuthenticated" to="/create" class="btn-secondary text-sm px-6 py-3"
+            aria-label="Crear un nuevo evento">
             Crear Evento
           </NuxtLink>
         </nav>
@@ -26,7 +28,8 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <header class="flex justify-between items-center mb-4">
           <h2 id="featured-events-heading" class="text-2xl font-bold text-white">Eventos Destacados</h2>
-          <NuxtLink to="/events" class="text-orange-500 hover:text-orange-400 font-medium text-sm" aria-label="Ver todos los eventos">
+          <NuxtLink to="/events" class="text-orange-500 hover:text-orange-400 font-medium text-sm"
+            aria-label="Ver todos los eventos">
             Ver todos →
           </NuxtLink>
         </header>
@@ -35,48 +38,36 @@
           <div class="text-orange-400 text-lg animate-pulse">Cargando eventos...</div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation" role="list">
-          <article
-            v-for="event in featuredEvents"
-            :key="event.id"
-            class="group transform transition-all duration-300 hover:scale-105"
-            role="listitem"
-          >
-            <NuxtLink
-              :to="`/events/${event.id}`"
-              :aria-label="`Ver detalles del evento ${event.title} el ${formatDate(event.date)} en ${event.location}`"
-              class="block"
-            >
-              <div class="bg-gray-800 rounded-sm overflow-hidden hover:bg-gray-750 transition-all duration-300 hover:shadow-2xl">
-                <img
-                  v-if="!imageLoadErrors[event.id]"
-                  :src="event.image_url"
-                  :alt="`Imagen del evento ${event.title} en ${event.location}`"
+          <article v-for="event in featuredEvents" :key="event.id"
+            class="group transform transition-all duration-300 hover:scale-105" role="listitem">
+            <NuxtLink :to="`/events/${event.id}`"
+              :aria-label="`Ver detalles del evento ${event.title || 'Evento'} el ${formatDate(event.date || '')} en ${event.location || 'Ubicación'}`"
+              class="block">
+              <div
+                class="bg-gray-800 rounded-sm overflow-hidden hover:bg-gray-750 transition-all duration-300 hover:shadow-2xl">
+                <img v-if="!imageLoadErrors[event.id]" :src="event.image_url"
+                  :alt="`Imagen del evento ${event.title || 'Evento'} en ${event.location || 'Ubicación'}`"
                   class="w-full h-56 object-cover group-hover:scale-101 transition-transform duration-500"
-                  @error="handleImageError(event.id)"
-                  loading="lazy"
-                />
+                  @error="handleImageError(event.id)" loading="lazy" />
                 <!-- Fallback when image fails -->
-                <div
-                  v-else
-                  class="w-full h-56 bg-gray-600 flex items-center justify-center"
-                  role="img"
-                  :aria-label="`Sin imagen disponible para el evento ${event.title}`"
-                >
+                <div v-else class="w-full h-56 bg-gray-600 flex items-center justify-center" role="img"
+                  :aria-label="`Sin imagen disponible para el evento ${event.title || 'Evento'}`">
                   <span class="text-gray-400 text-sm text-center">Sin imagen</span>
                 </div>
                 <div class="p-6">
                   <h3 class="font-semibold text-white group-hover:text-orange-400 transition-colors duration-300 mb-2">
-                    {{ event.title }}
+                    {{ event.title || 'Evento sin título' }}
                   </h3>
                   <time class="text-sm text-gray-400 mb-3 block" :datetime="event.date">
-                    {{ formatDate(event.date) }} • {{ event.time }}
+                    {{ formatDate(event.date || '') }} • {{ event.time || '' }}
                   </time>
                   <p class="text-gray-300 text-sm line-clamp-2">
-                    {{ event.description }}
+                    {{ event.description || 'Sin descripción' }}
                   </p>
-                  <address class="flex items-center mt-4 text-sm text-gray-400 transform group-hover:translate-x-2 transition-transform duration-300 not-italic">
+                  <address
+                    class="flex items-center mt-4 text-sm text-gray-400 transform group-hover:translate-x-2 transition-transform duration-300 not-italic">
                     <MapPin class="w-4 h-4 mr-1" aria-hidden="true" />
-                    {{ event.location }}
+                    {{ event.location || 'Ubicación no especificada' }}
                   </address>
                 </div>
               </div>
@@ -106,7 +97,12 @@ onMounted(() => {
   fetchEventsFromApi();
 });
 
-const featuredEvents = computed(() => events.value.slice(0, 6));
+const featuredEvents = computed(() => {
+  if (!events.value || !Array.isArray(events.value)) {
+    return [];
+  }
+  return events.value.slice(0, 6).filter(event => event && event.title);
+});
 
 const imageLoadErrors = ref<Record<string, boolean>>({});
 
@@ -115,27 +111,33 @@ const handleImageError = (eventId: string) => {
 };
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    month: 'long',
-    day: 'numeric'
-  });
+  if (!dateString) return 'Fecha no disponible';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha inválida';
+    return date.toLocaleDateString('es-ES', {
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return 'Fecha inválida';
+  }
 };
 
 // Structured data for SEO
 const structuredData = computed(() => {
   const events = featuredEvents.value.map(event => ({
     "@type": "Event",
-    "name": event.title,
-    "description": event.description,
-    "startDate": event.date,
-    "endDate": event.date,
+    "name": event.title || 'Evento sin título',
+    "description": event.description || 'Sin descripción',
+    "startDate": event.date || '',
+    "endDate": event.date || '',
     "location": {
       "@type": "Place",
-      "name": event.location,
-      "address": event.location
+      "name": event.location || 'Ubicación no especificada',
+      "address": event.location || 'Ubicación no especificada'
     },
-    "image": event.image_url,
+    "image": event.image_url || '',
     "url": `${useRuntimeConfig().public.baseUrl}/events/${event.id}`,
     "organizer": {
       "@type": "Organization",
@@ -148,15 +150,15 @@ const structuredData = computed(() => {
   return {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Zonora - Descubre Eventos Increíbles",
-    "description": "Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.",
+    "name": "Zonora - Donde suena, pasa",
+    "description": "La ciudad late. Con zonora pillas conciertos, juntas y movidas reales en tu ciudad. Arma plan con tu gente y cae.",
     "url": useRuntimeConfig().public.baseUrl,
     "mainEntity": {
       "@type": "ItemList",
-      "itemListElement": events.map((event, index) => ({
+      "itemListElement": (featuredEvents.value || []).map((event, index) => ({
         "@type": "ListItem",
         "position": index + 1,
-        "item": event
+        "item": event || {}
       }))
     },
     "publisher": {
@@ -205,7 +207,7 @@ useHead({
     },
     {
       property: 'og:url',
-      content: useRuntimeConfig().public.baseUrl
+      content: useRuntimeConfig().public.baseUrl as string
     },
     {
       property: 'og:site_name',
@@ -241,7 +243,7 @@ useHead({
   link: [
     {
       rel: 'canonical',
-      href: useRuntimeConfig().public.baseUrl
+      href: useRuntimeConfig().public.baseUrl as string
     }
   ],
   script: [

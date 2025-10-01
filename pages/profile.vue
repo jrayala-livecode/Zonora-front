@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-900 py-8">
+  <div class="py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Profile Header -->
@@ -35,6 +35,22 @@
                 <div class="h-4 bg-gray-700 rounded animate-pulse w-40"></div>
               </template>
             </ClientOnly>
+            
+            <!-- Active Artist Indicator -->
+            <div v-if="hasActiveArtist" class="mt-4 p-3 bg-orange-900/20 border border-purple-700/30 rounded-lg">
+              <div class="flex items-center justify-center">
+                <div class="flex items-center space-x-2">
+                  <span class="text-white-300 text-sm">Perfil Activo:</span>
+                  <span class="text-white font-medium">{{ activeArtist?.stage_name }}</span>
+                </div>
+                <button
+                  @click="clearActiveArtist()"
+                  class="ml-4 px-2 py-1 text-xs bg-orange-600 hover:bg-orange-700 text-white rounded transition-colors duration-200"
+                >
+                  Cambiar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -103,6 +119,7 @@
                 id="name"
                 v-model="profileForm.name"
                 type="text"
+                autocomplete="name"
                 class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 placeholder="Tu nombre completo"
                 required
@@ -177,6 +194,7 @@
                 id="currentPassword"
                 v-model="passwordForm.currentPassword"
                 type="password"
+                autocomplete="current-password"
                 class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 placeholder="Tu contraseña actual"
               />
@@ -191,6 +209,7 @@
                 id="newPassword"
                 v-model="passwordForm.newPassword"
                 type="password"
+                autocomplete="new-password"
                 class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 placeholder="Nueva contraseña"
               />
@@ -205,6 +224,7 @@
                 id="confirmPassword"
                 v-model="passwordForm.confirmPassword"
                 type="password"
+                autocomplete="new-password"
                 class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 placeholder="Confirma tu nueva contraseña"
               />
@@ -331,13 +351,36 @@
               <div v-for="artist in myArtists" :key="artist.id" class="bg-gray-700 rounded-lg p-6">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4">
-                    <div class="relative">
+                    <div class="relative group">
                       <img
                         :src="$convertImageUrl(artist.profile_picture_url) || 'https://www.gravatar.com/avatar/default?d=identicon&s=64'"
                         :alt="artist.stage_name"
                         class="w-12 h-12 rounded-full"
                         @error="handleAvatarError"
                       />
+                      
+                      <!-- Hidden file input -->
+                      <input
+                        :id="`profile-picture-${artist.id}`"
+                        type="file"
+                        accept="image/*"
+                        @change="handleProfilePictureUpload($event, artist.id)"
+                        class="hidden"
+                      />
+                      
+                      <!-- Hover overlay with change button -->
+                      <label
+                        :for="`profile-picture-${artist.id}`"
+                        :class="[
+                          'absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200',
+                          uploadingProfilePictures.has(artist.id.toString()) ? 'pointer-events-none' : ''
+                        ]"
+                      >
+                        <span class="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-1">
+                          Cambiar Avatar
+                        </span>
+                      </label>
+                      
                       <!-- Loading overlay -->
                       <div 
                         v-if="uploadingProfilePictures.has(artist.id.toString())"
@@ -351,7 +394,14 @@
                     </div>
                     <div>
                       <h3 class="text-lg font-semibold text-white">{{ artist.stage_name }}</h3>
-                      <p class="text-gray-400 text-sm">{{ artist.bio }}</p>
+                      <a
+                        @click.prevent="openEditModal(artist)"
+                        href="#"
+                        class="text-xs font-medium underline text-orange-400 hover:text-orange-300 transition-colors duration-200 cursor-pointer"
+                      >
+                        Editar
+                      </a>
+                      <p class="text-gray-400 text-sm mt-1">{{ artist.bio }}</p>
                       <div class="flex items-center mt-1">
                         <span 
                           :class="[
@@ -369,48 +419,61 @@
                       </div>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-2">
-                    <input
-                      :id="`profile-picture-${artist.id}`"
-                      type="file"
-                      accept="image/*"
-                      @change="handleProfilePictureUpload($event, artist.id)"
-                      class="hidden"
-                    />
-                    <label
-                      :for="`profile-picture-${artist.id}`"
-                      :class="[
-                        'px-3 py-1 text-xs font-medium rounded-lg transition-colors duration-200 cursor-pointer flex items-center',
-                        uploadingProfilePictures.has(artist.id.toString())
-                          ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      ]"
-                      :style="uploadingProfilePictures.has(artist.id.toString()) ? 'pointer-events: none;' : ''"
-                    >
-                      <svg v-if="uploadingProfilePictures.has(artist.id.toString())" class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span v-if="uploadingProfilePictures.has(artist.id.toString())">Subiendo...</span>
-                      <span v-else>📷 Foto</span>
-                    </label>
-                    <button
-                      @click="toggleArtistProfileVisibility(artist.id)"
-                      :class="[
-                        'px-3 py-1 text-xs font-medium rounded-lg transition-colors duration-200',
-                        artist.is_public 
-                          ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' 
-                          : 'bg-orange-600 text-white hover:bg-orange-700'
-                      ]"
-                    >
-                      {{ artist.is_public ? 'Ocultar' : 'Mostrar' }}
-                    </button>
-                    <NuxtLink
-                      :to="`/artists/${artist.id}`"
-                      class="px-3 py-1 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
-                    >
-                      Ver
-                    </NuxtLink>
+                  <div class="space-y-2">
+                    <!-- Visibility Toggle -->
+                    <div class="text-center">
+                      <a
+                        @click.prevent="toggleArtistProfileVisibility(artist.id)"
+                        href="#"
+                        :class="[
+                          'text-xs font-medium underline transition-colors duration-200 cursor-pointer',
+                          artist.is_public 
+                            ? 'text-gray-400 hover:text-gray-300' 
+                            : 'text-orange-400 hover:text-orange-300'
+                        ]"
+                      >
+                        {{ artist.is_public ? 'Ocultar' : 'Mostrar' }}
+                      </a>
+                      <p class="text-xs text-gray-400 mt-1">
+                        {{ artist.is_public ? 'Ocultar perfil del público' : 'Hacer perfil público' }}
+                      </p>
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="text-center">
+                      <a
+                        v-if="!isActiveArtist(artist.id)"
+                        @click.prevent="setArtistAsActive(artist)"
+                        href="#"
+                        class="text-xs font-medium underline text-purple-400 hover:text-purple-300 transition-colors duration-200 cursor-pointer"
+                      >
+                        Activar
+                      </a>
+                      <a
+                        v-else
+                        @click.prevent="clearActiveArtist()"
+                        href="#"
+                        class="text-xs font-medium underline text-yellow-400 hover:text-yellow-300 transition-colors duration-200 cursor-pointer"
+                      >
+                        Activo
+                      </a>
+                      <p class="text-xs text-gray-400 mt-1">
+                        {{ isActiveArtist(artist.id) ? 'Perfil activo para eventos' : 'Activar para crear eventos' }}
+                      </p>
+                    </div>
+
+                    <!-- View Profile -->
+                    <div class="text-center">
+                      <NuxtLink
+                        :to="`/artists/${artist.id}`"
+                        class="text-xs font-medium underline text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                      >
+                        Ver
+                      </NuxtLink>
+                      <p class="text-xs text-gray-400 mt-1">
+                        Ver perfil público
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -460,6 +523,7 @@
                   id="stage_name"
                   v-model="artistForm.stage_name"
                   type="text"
+                  autocomplete="username"
                   required
                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                   placeholder="Tu nombre artístico"
@@ -483,17 +547,45 @@
 
               <!-- Genres -->
               <div>
-                <label for="genres" class="block text-sm font-medium text-gray-300 mb-2">
+                <label class="block text-sm font-medium text-gray-300 mb-2">
                   Géneros Musicales
                 </label>
-                <input
-                  id="genres"
-                  v-model="artistForm.genres"
-                  type="text"
-                  class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Ej: Rock, Pop, Jazz (separados por comas)"
-                />
-                <p class="text-gray-400 text-sm mt-1">Separa los géneros con comas</p>
+                
+                <!-- Genre Tags Display -->
+                <div class="flex flex-wrap gap-2 mb-3 min-h-[40px] p-3 bg-gray-700 border border-gray-600 rounded-lg">
+                  <div
+                    v-for="(genre, index) in createGenreTags"
+                    :key="index"
+                    class="inline-flex items-center px-3 py-1 bg-orange-600 text-white text-sm rounded-full"
+                  >
+                    <span>{{ genre }}</span>
+                    <button
+                      type="button"
+                      @click="removeCreateGenre(index)"
+                      class="ml-2 text-orange-200 hover:text-white transition-colors duration-200"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Add Genre Input -->
+                  <input
+                    ref="createGenreInput"
+                    v-model="newCreateGenre"
+                    @input="parseCreateGenres"
+                    @keydown.enter.prevent="addCurrentCreateGenre"
+                    @keydown.comma.prevent="addCurrentCreateGenre"
+                    @blur="addCurrentCreateGenre"
+                    type="text"
+                    class="flex-1 min-w-[120px] bg-transparent text-white placeholder-gray-400 focus:outline-none"
+                    placeholder="Agregar género..."
+                    maxlength="100"
+                  />
+                </div>
+                
+                <p class="text-xs text-gray-500">Presiona Enter o escribe una coma para agregar géneros</p>
               </div>
 
               <!-- Social Links -->
@@ -505,6 +597,7 @@
                   id="social_links"
                   v-model="artistForm.social_links"
                   type="text"
+                  autocomplete="url"
                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                   placeholder="Ej: https://spotify.com/artist, https://instagram.com/artist"
                 />
@@ -536,44 +629,34 @@
           </form>
         </div>
         </Transition>
-
-        <!-- Footer Links -->
-        <div class="flex justify-center space-x-8 mt-12 pt-8 border-t border-gray-700">
-          <NuxtLink to="/terms" class="text-gray-400 hover:text-white text-sm">
-            Términos de Servicio
-          </NuxtLink>
-          <NuxtLink to="/privacy" class="text-gray-400 hover:text-white text-sm">
-            Política de Privacidad
-          </NuxtLink>
-        </div>
-
-        <!-- Social Links -->
-        <div class="flex justify-center space-x-4 mt-6">
-          <!-- (los íconos sociales quedan igual) -->
-          <a href="#" class="text-gray-400 hover:text-white">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
-            </svg>
-          </a>
-          <!-- demás íconos... -->
-        </div>
-        </div>
-
-        <!-- Copyright -->
-        <div class="text-center mt-8 text-sm text-gray-500">
-          © 2025 Zonora. Todos los derechos reservados.
       </div>
     </div>
+
+    <!-- Artist Edit Modal -->
+    <ArtistEditModal
+      :is-open="isEditModalOpen"
+      :artist="selectedArtist"
+      @close="closeEditModal"
+      @updated="handleArtistUpdated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth'
+});
+
 import { reactive, ref, computed, watch } from 'vue';
 import { useUserStore } from '~/store/user';
+import { useActiveArtistStore } from '~/store/activeArtist';
+import ArtistEditModal from '~/components/ArtistEditModal.vue';
+import { useRuntimeConfig } from '#app';
 
 const { user } = useAuth();
 const userStore = useUserStore();
 const { getMyArtists, createArtist, toggleArtistVisibility } = useArtists();
+const { activeArtist, hasActiveArtist, setActiveArtist, clearActiveArtist, isActiveArtist } = useActiveArtistStore();
 
 // Tab management
 const activeTab = ref('profile');
@@ -585,6 +668,15 @@ const showCreateArtistForm = ref(false);
 const isCreatingArtist = ref(false);
 const isArtistsSectionCollapsed = ref(false);
 const uploadingProfilePictures = ref<Set<string>>(new Set());
+
+// Edit modal management
+const isEditModalOpen = ref(false);
+const selectedArtist = ref<any>(null);
+
+// Create artist genre tags management
+const createGenreTags = ref<string[]>([]);
+const newCreateGenre = ref('');
+const createGenreInput = ref<HTMLInputElement | null>(null);
 
 // Form data
 const profileForm = reactive({
@@ -643,7 +735,6 @@ const clearMessage = () => {
 };
 
 const handleAvatarError = (event: Event) => {
-  console.log('Avatar load error, falling back to Gravatar');
   const img = event.target as HTMLImageElement;
   if (!img.src.includes('gravatar.com')) {
     img.src = 'https://www.gravatar.com/avatar/default?d=identicon&s=96';
@@ -750,7 +841,7 @@ const createArtistProfile = async () => {
     const artistData = {
       stage_name: artistForm.stage_name,
       bio: artistForm.bio,
-      genres: artistForm.genres ? artistForm.genres.split(',').map(g => g.trim()).filter(g => g) : [],
+      genres: createGenreTags.value,
       social_links: artistForm.social_links ? artistForm.social_links.split(',').map(l => l.trim()).filter(l => l) : []
     };
 
@@ -775,6 +866,11 @@ const toggleArtistProfileVisibility = async (artistId: string) => {
     console.error('Error toggling artist visibility:', error);
     showMessage('Error al actualizar la visibilidad del artista', 'error');
   }
+};
+
+const setArtistAsActive = (artist: any) => {
+  setActiveArtist(artist);
+  showMessage(`${artist.stage_name} establecido como perfil activo`, 'success');
 };
 
 // Image compression function
@@ -815,14 +911,12 @@ const compressImage = (file: File, maxSizeKB: number = 1500): Promise<File> => {
           }
           
           const sizeKB = blob.size / 1024;
-          console.log(`Compression attempt: ${sizeKB.toFixed(1)}KB (quality: ${quality})`);
           
           if (sizeKB <= maxSizeKB || quality <= 0.1) {
             const compressedFile = new File([blob], file.name, {
               type: 'image/jpeg',
               lastModified: Date.now()
             });
-            console.log(`Final compressed size: ${sizeKB.toFixed(1)}KB (${((blob.size / file.size) * 100).toFixed(1)}% of original)`);
             resolve(compressedFile);
           } else {
             quality -= 0.1;
@@ -869,47 +963,12 @@ const handleProfilePictureUpload = async (event: Event, artistId: string) => {
     const formData = new FormData();
     formData.append('profile_picture', processedFile);
     
-    // Debug the file being sent
-    console.log('Original file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    });
-    
-    console.log('Processed file:', {
-      name: processedFile.name,
-      size: processedFile.size,
-      type: processedFile.type,
-      lastModified: processedFile.lastModified
-    });
-    
-    if (file.size !== processedFile.size) {
-      const compressionRatio = ((processedFile.size / file.size) * 100).toFixed(1);
-      console.log(`Image compressed: ${compressionRatio}% of original size`);
-    }
-    
-    // Debug FormData contents
-    console.log('FormData entries:');
-    for (let [key, value] of (formData as any).entries()) {
-      console.log(key, value);
-    }
+    // Prepare form data
     
     const config = useRuntimeConfig();
     const token = localStorage.getItem('zonora_token');
     const baseUrl = config.public.apiBaseUrl || 'http://localhost:8000';
     const apiUrl = `${baseUrl}/artists/${artistId}/profile-picture`;
-    
-    console.log('Config:', config.public);
-    console.log('API Base URL from config:', config.public.apiBaseUrl);
-    console.log('Fallback base URL:', baseUrl);
-    console.log('Final API URL:', apiUrl);
-    console.log('Token available:', !!token);
-    console.log('Token value:', token ? token.substring(0, 20) + '...' : 'null');
-    console.log('Token from localStorage (zonora_token):', localStorage.getItem('zonora_token'));
-    console.log('Token from localStorage (token):', localStorage.getItem('token'));
-    console.log('Token from localStorage (auth_token):', localStorage.getItem('auth_token'));
-    console.log('All localStorage keys:', Object.keys(localStorage));
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -919,17 +978,12 @@ const handleProfilePictureUpload = async (event: Event, artistId: string) => {
       body: formData
     });
     
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries((response.headers as any).entries()));
-    
     if (!response.ok) {
       let errorMessage = 'Error al subir la imagen';
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
-        console.log('Error response data:', errorData);
       } catch (e) {
-        console.log('Could not parse error response as JSON');
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
@@ -965,6 +1019,8 @@ const resetArtistForm = () => {
   artistForm.bio = '';
   artistForm.genres = '';
   artistForm.social_links = '';
+  createGenreTags.value = [];
+  newCreateGenre.value = '';
 };
 
 const toggleCreateArtistForm = () => {
@@ -984,12 +1040,112 @@ const toggleCreateArtistForm = () => {
   }
 };
 
+// Edit modal functions
+const openEditModal = (artist: any) => {
+  selectedArtist.value = artist;
+  isEditModalOpen.value = true;
+};
+
+const closeEditModal = () => {
+  isEditModalOpen.value = false;
+  selectedArtist.value = null;
+};
+
+const handleArtistUpdated = async (updatedArtist: any) => {
+  // Update the artist in the local array
+  const artistIndex = myArtists.value.findIndex(a => a.id === updatedArtist.id);
+  if (artistIndex !== -1) {
+    myArtists.value[artistIndex] = updatedArtist;
+  }
+  
+  // If this is the active artist, update the active artist store
+  if (activeArtist.value && activeArtist.value.id === updatedArtist.id) {
+    setActiveArtist(updatedArtist);
+  }
+  
+  // Refresh user data to ensure local storage is up to date
+  await refreshUserData();
+  
+  showMessage('Perfil artístico actualizado exitosamente', 'success');
+};
+
+// Function to refresh user data from server
+const refreshUserData = async () => {
+  try {
+    const config = useRuntimeConfig();
+    const apiBaseUrl = config.public.apiBaseUrl as string;
+    
+    if (!userStore.token) return;
+    
+    const userData = await $fetch('/me', {
+      baseURL: apiBaseUrl,
+      headers: {
+        Authorization: `Bearer ${userStore.token}`,
+      },
+    });
+
+    // Update user data with fresh data from server
+    const user = (userData as any).user || userData;
+    const normalizedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar_url || user.avatar || '',
+      description: user.description ?? '',
+      joinedAt: user.created_at ?? '',
+    };
+
+    userStore.setUser(normalizedUser);
+  } catch (error) {
+    console.error('Error refreshing user data:', error);
+  }
+};
+
+// Create artist genre management functions
+const parseCreateGenres = () => {
+  const text = newCreateGenre.value
+  const parts = text.split(',')
+  
+  // If we have more than one part, it means there's at least one comma
+  if (parts.length > 1) {
+    // Add all complete parts (before the last comma) as tags
+    for (let i = 0; i < parts.length - 1; i++) {
+      const genre = parts[i].trim()
+      if (genre && !createGenreTags.value.includes(genre) && createGenreTags.value.length < 10) {
+        createGenreTags.value.push(genre)
+      }
+    }
+    
+    // Keep only the last part (after the last comma) in the input
+    newCreateGenre.value = parts[parts.length - 1].trim()
+  }
+}
+
+const addCurrentCreateGenre = () => {
+  const genre = newCreateGenre.value.trim();
+  if (genre && !createGenreTags.value.includes(genre) && createGenreTags.value.length < 10) {
+    createGenreTags.value.push(genre);
+    newCreateGenre.value = '';
+  }
+};
+
+const removeCreateGenre = (index: number) => {
+  createGenreTags.value.splice(index, 1);
+};
+
 // Watch for tab changes to load artists when needed
 watch(activeTab, (newTab) => {
   if (newTab === 'artist' && myArtists.value.length === 0) {
     loadMyArtists();
   }
 });
+
+// Watch for active artist changes to update the UI
+watch(activeArtist, (newActiveArtist) => {
+  if (newActiveArtist) {
+    // Active artist changed
+  }
+}, { deep: true });
 
 // SEO
 useHead({

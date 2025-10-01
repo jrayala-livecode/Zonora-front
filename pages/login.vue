@@ -153,9 +153,13 @@ const form = reactive({
 
 const redirectToGoogleLogin = async () => {
   try {
-    const response = await fetch(`${config.public.apiBaseUrl}/auth/google`);
+    // Get redirect URL from query params
+    const route = useRoute();
+    const redirectTo = route.query.redirect as string || '/';
+    
+    // Include redirect parameter in Google auth request
+    const response = await fetch(`${config.public.apiBaseUrl}/auth/google?redirect=${encodeURIComponent(redirectTo)}`);
     const data = await response.json();
-    console.log('Redirección a Google:', data);
     if (data.redirect_url) {
       window.location.href = data.redirect_url; // redirige a la URL que el backend devolvió
     } else {
@@ -224,9 +228,14 @@ const handleLogin = async () => {
     }
 
     isFadingOut.value = true;
+    
+    // Get redirect URL from query params
+    const route = useRoute();
+    const redirectTo = route.query.redirect as string || '/';
+    
     setTimeout(() => {
       isLoggedIn.value = true;
-      router.push('/');
+      router.push(redirectTo);
     }, 700);
     
   } catch (error) {
@@ -245,7 +254,6 @@ const handleDevAdminLogin = async () => {
 
   isLoading.value = true;
   try {
-    console.log('Attempting dev admin login...');
     // Use a default admin email for development
     // You can change this to any admin email in your database
     await login({
@@ -254,7 +262,6 @@ const handleDevAdminLogin = async () => {
       hcaptchaToken: 'dev-bypass-token', // Bypass token for development
     });
 
-    console.log('Dev admin login successful!');
     isFadingOut.value = true;
     setTimeout(() => {
       isLoggedIn.value = true;

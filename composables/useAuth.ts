@@ -1,11 +1,13 @@
 import { useCookie, useRuntimeConfig } from '#app';
 import { useUserStore } from '~/store/user';
+import { useApiClient } from '~/composables/useApiClient';
 
 export const useAuth = () => {
   const config = useRuntimeConfig();
   const apiBaseUrl = config.public.apiBaseUrl as string;
   const token = useCookie('token');
   const userStore = useUserStore();
+  const { setTokenExpiration, cleanup } = useApiClient();
   const isLoading = ref(true);
   
   // Use store's computed authentication state
@@ -35,7 +37,7 @@ export const useAuth = () => {
         });
 
         // Update user data with fresh data from server
-        const user = userData.user || userData; // Handle both response formats
+        const user = (userData as any).user || userData; // Handle both response formats
         const normalizedUser = {
           id: user.id,
           name: user.name,
@@ -86,16 +88,11 @@ export const useAuth = () => {
         body['h-captcha-response'] = credentials.hcaptchaToken;
       }
 
-      console.log('Login request body:', body);
-      console.log('API Base URL:', apiBaseUrl);
-
       const response = await $fetch<{ access_token: string; user: any }>('/login', {
         baseURL: apiBaseUrl,
         method: 'POST',
         body,
       });
-
-      console.log('Login response:', response);
 
       if (!response.user || !response.access_token) {
         throw new Error("Respuesta incompleta del servidor");
@@ -117,10 +114,16 @@ export const useAuth = () => {
       userStore.setToken(response.access_token);
       userStore.setInitialized(true);
 
+      // Set token expiration tracking
+      if ((response as any).expires_in) {
+        setTokenExpiration((response as any).expires_in);
+      }
+
       // Also set cookie for compatibility
       token.value = response.access_token;
 
-      await navigateTo('/');
+      // Don't navigate here - let the login page handle redirect
+      // await navigateTo('/');
     } catch (error: any) {
       console.error('Error en login:', error);
       if (error?.statusCode === 401 || error?.response?.status === 401) {
@@ -152,7 +155,7 @@ export const useAuth = () => {
         headers: {
           Authorization: `Bearer ${response.access_token}`,
         },
-      });
+      }) as any;
 
       const user = userData.user || userData; // Handle both response formats
       const normalizedUser = {
@@ -171,7 +174,8 @@ export const useAuth = () => {
       // Also set cookie for compatibility
       token.value = response.access_token;
 
-      await navigateTo('/');
+      // Don't navigate here - let the login page handle redirect
+      // await navigateTo('/');
     } catch (error) {
       console.error('Error en login con Google:', error);
       throw error;
@@ -193,6 +197,9 @@ export const useAuth = () => {
         });
       }
     } finally {
+      // Clean up token expiration tracking
+      cleanup();
+      
       // Always clear local state
       userStore.clearAuth();
       token.value = null;

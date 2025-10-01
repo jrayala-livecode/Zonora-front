@@ -86,6 +86,9 @@
                 <NuxtLink to="/artists/my-stats" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Mis Estadísticas
                 </NuxtLink>
+                <NuxtLink to="/invitations" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
+                  Mis Invitaciones
+                </NuxtLink>
                 <!--            <NuxtLink to="/settings" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Configuración
                 </NuxtLink>

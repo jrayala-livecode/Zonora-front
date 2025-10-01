@@ -97,6 +97,20 @@
                 1 ? 's' : '' }}</span>
             </div>
           </div>
+
+          <!-- Manage Event Button (for event owner) -->
+          <div v-if="isEventOwner" class="mt-4">
+            <NuxtLink
+              :to="`/events/${eventId}/manage`"
+              class="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Gestionar Evento
+            </NuxtLink>
+          </div>
         </div>
 
         <!-- Pricing Section -->
@@ -185,20 +199,16 @@
           <div class="mb-4" itemprop="location" itemscope itemtype="https://schema.org/Place">
             <div class="flex items-center space-x-2 mb-2">
               <MapPin class="w-5 h-5 text-orange-500" aria-hidden="true" />
-              <span class="text-white font-medium" itemprop="name">{{ event.location }}</span>
+              <span v-if="!event.venue" class="text-white font-medium" itemprop="name">{{ event.location }}</span>
+              <NuxtLink v-else :to="`/venues/${event.venue.id}`" 
+                class="text-orange-400 hover:text-orange-300 underline font-medium transition-colors duration-200" 
+                itemprop="name">
+                {{ event.venue.name }}
+              </NuxtLink>
             </div>
             <address class="text-gray-300 ml-7 not-italic" itemprop="address">{{ event.address }}</address>
             <meta itemprop="latitude" :content="event.latitude?.toString()" />
             <meta itemprop="longitude" :content="event.longitude?.toString()" />
-
-            <!-- Venue Link -->
-            <div v-if="event.venue" class="mt-4">
-              <NuxtLink :to="`/venues/${event.venue.id}`"
-                class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
-                <MapPin class="w-4 h-4 mr-2" />
-                Ver Venue: {{ event.venue.name }}
-              </NuxtLink>
-            </div>
           </div>
           <div class="rounded-lg overflow-hidden h-64">
             <MapLeaflet v-if="event.latitude && event.longitude" :lat="event.latitude" :lng="event.longitude"
@@ -280,7 +290,7 @@
             </div>
             <NuxtLink 
               :to="`/venues/${event.venue.id}`"
-              class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              class="text-orange-400 hover:text-orange-300 underline text-sm transition-colors duration-200"
             >
               Ver Venue
             </NuxtLink>
@@ -345,7 +355,6 @@ const imageLoadFailed = ref(false);
 onMounted(async () => {
   const L = await import('leaflet');
   await fetchEvent();
-  console.log("Evento cargado:", event.value);
 });
 
 const fetchEvent = async () => {
@@ -438,6 +447,12 @@ const structuredData = computed(() => {
       "url": `${config.public.baseUrl}/events/${eventId}`
     }
   };
+});
+
+// Check if current user is the event owner
+const isEventOwner = computed(() => {
+  const { user } = useUserStore()
+  return user.value && event.value && user.value.id === event.value.user_id
 });
 
 // Breadcrumb structured data

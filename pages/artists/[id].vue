@@ -123,15 +123,29 @@
               <!-- Action Buttons -->
               <div class="flex gap-2">
                 <FollowButton 
+                  v-if="!isOwner"
                   :artist-id="artist.id" 
                   :initial-follow-status="artist.follow_status?.is_following"
                   @follow-changed="handleFollowChanged"
                 />
-                <button class="flex-1 inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded transition-colors duration-200">
+                <button 
+                  v-if="artist.followers_count > 0"
+                  @click="showFollowersModal = true"
+                  class="flex-1 inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded transition-colors duration-200"
+                >
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  {{ artist.followers_count }} seguidor{{ artist.followers_count !== 1 ? 'es' : '' }}
+                </button>
+                <button 
+                  @click="shareArtist"
+                  class="flex-1 inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded transition-colors duration-200"
+                >
                   <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                   </svg>
-                  Compartir
+                  {{ shareButtonText }}
                 </button>
               </div>
             </div>
@@ -178,47 +192,6 @@
             </div>
           </div>
 
-          <!-- Followed Artists Card -->
-          <div v-if="artist.following && artist.following.length > 0" class="bg-gray-800 rounded-lg shadow-lg p-4">
-            <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
-              <div class="w-5 h-5 bg-orange-500 rounded flex items-center justify-center mr-2">
-                <span class="text-white font-bold text-xs">👥</span>
-              </div>
-              Artistas que sigue ({{ artist.following.length }})
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <NuxtLink 
-                v-for="followedArtist in artist.following.slice(0, 6)" 
-                :key="followedArtist.id"
-                :to="`/artists/${followedArtist.id}`"
-                class="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200"
-              >
-                <img 
-                  v-if="followedArtist.profile_picture_url"
-                  :src="getImageUrl(followedArtist.profile_picture_url)"
-                  :alt="followedArtist.stage_name"
-                  class="w-10 h-10 rounded-full object-cover"
-                  @error="handleImageError"
-                />
-                <div v-else class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                  </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-white truncate">{{ followedArtist.stage_name }}</p>
-                  <p v-if="followedArtist.genres && followedArtist.genres.length > 0" class="text-xs text-gray-400 truncate">
-                    {{ followedArtist.genres.slice(0, 2).join(', ') }}
-                  </p>
-                </div>
-              </NuxtLink>
-            </div>
-            <div v-if="artist.following.length > 6" class="mt-3 text-center">
-              <button class="text-xs text-orange-400 hover:text-orange-300">
-                Ver {{ artist.following.length - 6 }} más
-              </button>
-            </div>
-          </div>
 
           <!-- Metrics Section (for artist owners) -->
           <div v-if="isOwner && metrics" class="space-y-4">
@@ -287,6 +260,13 @@
           />
         </div>
       </div>
+
+      <!-- Followers Modal -->
+      <ArtistFollowersModal 
+        :is-open="showFollowersModal"
+        :artist-id="artist?.id"
+        @close="showFollowersModal = false"
+      />
     </div>
   </div>
 </template>
@@ -310,6 +290,8 @@ const loading = ref(true);
 const error = ref('');
 const showSocialLinks = ref(false);
 const selectedImage = ref('');
+const showFollowersModal = ref(false);
+const shareButtonText = ref('Compartir');
 
 // Computed
 const isOwner = computed(() => {
@@ -355,10 +337,17 @@ const closeImageModal = () => {
   selectedImage.value = '';
 };
 
-const handleFollowChanged = (isFollowing: boolean) => {
+const handleFollowChanged = async (isFollowing: boolean) => {
   // Update the artist's follow status in the local state
   if (artist.value && artist.value.follow_status) {
     artist.value.follow_status.is_following = isFollowing;
+  }
+  
+  // Reload the artist data to get updated follower count and other metrics
+  try {
+    await loadArtist();
+  } catch (error) {
+    console.error('Error reloading artist after follow change:', error);
   }
 };
 
@@ -367,6 +356,55 @@ const startConversation = () => {
   
   // Navigate to chat with the artist's user ID
   navigateTo(`/chat/${artist.value.user.id}`);
+};
+
+const shareArtist = async () => {
+  if (!artist.value) return;
+  
+  const artistUrl = `${window.location.origin}/artists/${artist.value.id}`;
+  
+  try {
+    // Try to use the modern Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(artistUrl);
+      shareButtonText.value = '¡Copiado!';
+      setTimeout(() => {
+        shareButtonText.value = 'Compartir';
+      }, 2000);
+    } else {
+      // Fallback for older browsers or non-secure contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = artistUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        shareButtonText.value = '¡Copiado!';
+        setTimeout(() => {
+          shareButtonText.value = 'Compartir';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+        shareButtonText.value = 'Error';
+        setTimeout(() => {
+          shareButtonText.value = 'Compartir';
+        }, 2000);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to copy text: ', err);
+    shareButtonText.value = 'Error';
+    setTimeout(() => {
+      shareButtonText.value = 'Compartir';
+    }, 2000);
+  }
 };
 
 // Watch for artist changes to fetch metrics

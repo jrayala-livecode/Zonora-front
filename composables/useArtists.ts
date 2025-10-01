@@ -1,20 +1,38 @@
 import { useUserStore } from '~/store/user';
+import { useApiClient } from '~/composables/useApiClient';
 
 export const useArtists = () => {
   const config = useRuntimeConfig();
-  const apiBaseUrl = config.public.apiBaseUrl;
+  const apiBaseUrl = config.public.apiBaseUrl || 'http://127.0.0.1:8000/api';
+  const { apiRequestJson } = useApiClient();
 
-  // Get all public artists
-  const getArtists = async () => {
+  // Get all public artists with pagination
+  const getArtists = async (params: {
+    page?: number;
+    per_page?: number;
+    sort_by?: string;
+    genre?: string;
+  } = {}) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/artists`);
+      const searchParams = new URLSearchParams();
+      
+      if (params.page) searchParams.append('page', params.page.toString());
+      if (params.per_page) searchParams.append('per_page', params.per_page.toString());
+      if (params.sort_by) searchParams.append('sort_by', params.sort_by);
+      if (params.genre) searchParams.append('genre', params.genre);
+      
+      const url = `${apiBaseUrl}/artists${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const response = await fetch(url);
       const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch artists');
       }
       
-      return data.data || [];
+      return {
+        data: data.data || [],
+        pagination: data.pagination || null
+      };
     } catch (error) {
       console.error('Error fetching artists:', error);
       throw error;
@@ -23,15 +41,19 @@ export const useArtists = () => {
 
   // Get artist by ID
   const getArtist = async (id: string) => {
-    console.log('getArtist called with ID:', id);
-    console.log('API Base URL:', apiBaseUrl);
-    console.log('Full URL:', `${apiBaseUrl}/artists/${id}`);
-    
     try {
-      const response = await fetch(`${apiBaseUrl}/artists/${id}`);
-      console.log('Response status:', response.status);
+      const userStore = useUserStore();
+      const headers: HeadersInit = {};
+      
+      // Add authentication header if user is logged in
+      if (userStore.token) {
+        headers['Authorization'] = `Bearer ${userStore.token}`;
+      }
+      
+      const response = await fetch(`${apiBaseUrl}/artists/${id}`, {
+        headers
+      });
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch artist');
@@ -44,17 +66,34 @@ export const useArtists = () => {
     }
   };
 
-  // Search artists
-  const searchArtists = async (query: string) => {
+  // Search artists with pagination
+  const searchArtists = async (query: string, params: {
+    page?: number;
+    per_page?: number;
+    sort_by?: string;
+    genre?: string;
+  } = {}) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/artists/search?q=${encodeURIComponent(query)}`);
+      const searchParams = new URLSearchParams();
+      searchParams.append('query', query);
+      
+      if (params.page) searchParams.append('page', params.page.toString());
+      if (params.per_page) searchParams.append('per_page', params.per_page.toString());
+      if (params.sort_by) searchParams.append('sort_by', params.sort_by);
+      if (params.genre) searchParams.append('genre', params.genre);
+      
+      const url = `${apiBaseUrl}/artists/search?${searchParams.toString()}`;
+      const response = await fetch(url);
       const data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to search artists');
       }
       
-      return data.data || [];
+      return {
+        data: data.data || [],
+        pagination: data.pagination || null
+      };
     } catch (error) {
       console.error('Error searching artists:', error);
       throw error;
@@ -63,56 +102,23 @@ export const useArtists = () => {
 
   // Get current user's artists
   const getMyArtists = async () => {
-    const userStore = useUserStore();
-    
-    if (!userStore.token) {
-      throw new Error('Not authenticated');
-    }
-
     try {
-      const response = await fetch(`${apiBaseUrl}/artists/me`, {
-        headers: {
-          'Authorization': `Bearer ${userStore.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch my artists');
-      }
-      
-      return data.data || [];
+      const data = await apiRequestJson('/artists/me');
+      const artists = data.data || [];
+      return artists;
     } catch (error) {
-      console.error('Error fetching my artists:', error);
+      console.error('useArtists: Error fetching my artists:', error);
       throw error;
     }
   };
 
   // Create new artist profile
   const createArtist = async (artistData: any) => {
-    const userStore = useUserStore();
-    
-    if (!userStore.token) {
-      throw new Error('Not authenticated');
-    }
-
     try {
-      const response = await fetch(`${apiBaseUrl}/artists`, {
+      const data = await apiRequestJson('/artists', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${userStore.token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(artistData),
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create artist');
-      }
       
       return data.data || data;
     } catch (error) {
@@ -123,27 +129,11 @@ export const useArtists = () => {
 
   // Update artist profile
   const updateArtist = async (id: string, artistData: any) => {
-    const userStore = useUserStore();
-    
-    if (!userStore.token) {
-      throw new Error('Not authenticated');
-    }
-
     try {
-      const response = await fetch(`${apiBaseUrl}/artists/${id}`, {
+      const data = await apiRequestJson(`/artists/${id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${userStore.token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(artistData),
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update artist');
-      }
       
       return data.data || data;
     } catch (error) {
@@ -154,26 +144,10 @@ export const useArtists = () => {
 
   // Toggle artist visibility
   const toggleArtistVisibility = async (id: string) => {
-    const userStore = useUserStore();
-    
-    if (!userStore.token) {
-      throw new Error('Not authenticated');
-    }
-
     try {
-      const response = await fetch(`${apiBaseUrl}/artists/${id}/visibility`, {
+      const data = await apiRequestJson(`/artists/${id}/visibility`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${userStore.token}`,
-          'Content-Type': 'application/json',
-        },
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to toggle artist visibility');
-      }
       
       return data.data || data;
     } catch (error) {
