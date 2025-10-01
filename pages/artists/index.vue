@@ -3,24 +3,24 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Header -->
-      <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-white mb-4">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">
           Artistas
         </h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+        <p class="text-sm text-gray-400 max-w-xl mx-auto">
           Descubre talentos increíbles y conecta con artistas de todos los géneros musicales
         </p>
       </div>
 
       <!-- Search and Filters -->
-      <div class="bg-gray-800 rounded-xl shadow-xl mb-8">
-        <div class="p-6">
-          <div class="flex flex-col md:flex-row gap-4">
+      <div class="bg-gray-800 rounded-lg shadow-lg mb-4">
+        <div class="p-4">
+          <div class="flex flex-col md:flex-row gap-3">
             <!-- Search Input -->
             <div class="flex-1">
               <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                  <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -28,18 +28,18 @@
                   v-model="searchQuery"
                   @input="debouncedSearch"
                   type="text"
-                  placeholder="Buscar artistas por nombre, género o biografía..."
-                  class="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Buscar artistas..."
+                  class="block w-full pl-8 pr-3 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
             </div>
 
             <!-- Genre Filter -->
-            <div class="md:w-64">
+            <div class="md:w-48">
               <select
                 v-model="selectedGenre"
                 @change="applyFilters"
-                class="block w-full px-3 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                class="block w-full px-2.5 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="">Todos los géneros</option>
                 <option v-for="genre in availableGenres" :key="genre" :value="genre">
@@ -49,15 +49,15 @@
             </div>
 
             <!-- Sort Options -->
-            <div class="md:w-48">
+            <div class="md:w-40">
               <select
                 v-model="sortBy"
                 @change="applyFilters"
-                class="block w-full px-3 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                class="block w-full px-2.5 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
               >
-                <option value="name">Ordenar por nombre</option>
-                <option value="newest">Más recientes</option>
-                <option value="oldest">Más antiguos</option>
+                <option value="name">Por nombre</option>
+                <option value="newest">Recientes</option>
+                <option value="oldest">Antiguos</option>
               </select>
             </div>
           </div>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- No Results State -->
-      <div v-else-if="!loading && filteredArtists.length === 0" class="text-center py-12">
+      <div v-else-if="!loading && artists.length === 0" class="text-center py-12">
         <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>
@@ -112,22 +112,22 @@
       </div>
 
       <!-- Artists Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         <ArtistCard
-          v-for="artist in paginatedArtists"
+          v-for="artist in artists"
           :key="artist.id"
           :artist="artist"
         />
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-center mt-12">
-        <nav class="flex items-center space-x-2">
+      <div v-if="totalPages > 1" class="flex items-center justify-center mt-6">
+        <nav class="flex items-center space-x-1.5">
           <button
             @click="currentPage = Math.max(1, currentPage - 1)"
             :disabled="currentPage === 1"
             :class="[
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+              'px-2 py-1.5 rounded text-xs font-medium transition-colors duration-200',
               currentPage === 1
                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -142,7 +142,7 @@
               :key="page"
               @click="currentPage = page"
               :class="[
-                'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+                'px-2 py-1.5 rounded text-xs font-medium transition-colors duration-200',
                 currentPage === page
                   ? 'bg-orange-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -156,7 +156,7 @@
             @click="currentPage = Math.min(totalPages, currentPage + 1)"
             :disabled="currentPage === totalPages"
             :class="[
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+              'px-2 py-1.5 rounded text-xs font-medium transition-colors duration-200',
               currentPage === totalPages
                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -168,11 +168,11 @@
       </div>
 
       <!-- Results Count -->
-      <div v-if="filteredArtists.length > 0" class="text-center mt-8">
-        <p class="text-gray-400">
-          Mostrando {{ ((currentPage - 1) * itemsPerPage) + 1 }} - 
-          {{ Math.min(currentPage * itemsPerPage, filteredArtists.length) }} 
-          de {{ filteredArtists.length }} artistas
+      <div v-if="totalArtists > 0" class="text-center mt-4">
+        <p class="text-gray-400 text-xs">
+          Mostrando {{ pagination?.from || 0 }} - 
+          {{ pagination?.to || 0 }} 
+          de {{ totalArtists }} artistas
         </p>
       </div>
     </div>
@@ -194,6 +194,8 @@ const selectedGenre = ref('');
 const sortBy = ref('name');
 const currentPage = ref(1);
 const itemsPerPage = ref(12);
+const pagination = ref(null);
+const totalArtists = ref(0);
 
 // Computed
 const availableGenres = computed(() => {
@@ -206,39 +208,8 @@ const availableGenres = computed(() => {
   return Array.from(genres).sort();
 });
 
-const filteredArtists = computed(() => {
-  let filtered = [...artists.value];
-
-  // Apply genre filter
-  if (selectedGenre.value) {
-    filtered = filtered.filter(artist => 
-      artist.genres && artist.genres.includes(selectedGenre.value)
-    );
-  }
-
-  // Apply sorting
-  filtered.sort((a, b) => {
-    switch (sortBy.value) {
-      case 'name':
-        return a.stage_name.localeCompare(b.stage_name);
-      case 'newest':
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      case 'oldest':
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-      default:
-        return 0;
-    }
-  });
-
-  return filtered;
-});
-
-const totalPages = computed(() => Math.ceil(filteredArtists.value.length / itemsPerPage.value));
-
-const paginatedArtists = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return filteredArtists.value.slice(start, end);
+const totalPages = computed(() => {
+  return pagination.value ? pagination.value.last_page : 1;
 });
 
 const visiblePages = computed(() => {
@@ -259,11 +230,23 @@ const loadArtists = async () => {
   error.value = '';
   
   try {
+    const params = {
+      page: currentPage.value,
+      per_page: itemsPerPage.value,
+      sort_by: sortBy.value,
+      genre: selectedGenre.value || undefined
+    };
+
+    let result;
     if (searchQuery.value.trim()) {
-      artists.value = await searchArtists(searchQuery.value.trim());
+      result = await searchArtists(searchQuery.value.trim(), params);
     } else {
-      artists.value = await getArtists();
+      result = await getArtists(params);
     }
+
+    artists.value = result.data;
+    pagination.value = result.pagination;
+    totalArtists.value = result.pagination?.total || 0;
   } catch (err) {
     error.value = err.message || 'Error al cargar artistas';
     console.error('Error loading artists:', err);
@@ -292,6 +275,11 @@ const clearFilters = () => {
 // Watch for filter changes
 watch([selectedGenre, sortBy], () => {
   applyFilters();
+});
+
+// Watch for page changes
+watch(currentPage, () => {
+  loadArtists();
 });
 
 // Lifecycle

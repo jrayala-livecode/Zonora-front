@@ -1,20 +1,20 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
+    <section class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
           Descubre Eventos
           <span class="text-orange-500">Increíbles</span>
         </h1>
-        <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+        <p class="text-lg text-gray-300 mb-6 max-w-xl mx-auto">
           Explora una amplia variedad de eventos en tu ciudad y conecta con personas que comparten tus intereses.
         </p>
-        <nav class="flex flex-col sm:flex-row gap-4 justify-center" aria-label="Navegación principal">
-          <NuxtLink to="/events" class="btn-primary text-lg px-8 py-4 animate-pulse" aria-label="Explorar todos los eventos disponibles">
+        <nav class="flex flex-col sm:flex-row gap-3 justify-center" aria-label="Navegación principal">
+          <NuxtLink to="/events" class="btn-primary text-sm px-6 py-3 animate-pulse" aria-label="Explorar todos los eventos disponibles">
             Explorar Eventos
           </NuxtLink>
-          <NuxtLink v-if="isAuthenticated" to="/create" class="btn-secondary text-lg px-8 py-4" aria-label="Crear un nuevo evento">
+          <NuxtLink v-if="isAuthenticated" to="/create" class="btn-secondary text-sm px-6 py-3" aria-label="Crear un nuevo evento">
             Crear Evento
           </NuxtLink>
         </nav>
@@ -22,11 +22,11 @@
     </section>
 
     <!-- Featured Events -->
-    <section class="py-16 bg-gray-900 animate-fade-in" aria-labelledby="featured-events-heading">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <header class="flex justify-between items-center mb-8">
-          <h2 id="featured-events-heading" class="text-3xl font-bold text-white">Eventos Destacados</h2>
-          <NuxtLink to="/events" class="text-orange-500 hover:text-orange-400 font-medium" aria-label="Ver todos los eventos">
+    <section class="py-8 bg-gray-900 animate-fade-in" aria-labelledby="featured-events-heading">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header class="flex justify-between items-center mb-4">
+          <h2 id="featured-events-heading" class="text-2xl font-bold text-white">Eventos Destacados</h2>
+          <NuxtLink to="/events" class="text-orange-500 hover:text-orange-400 font-medium text-sm" aria-label="Ver todos los eventos">
             Ver todos →
           </NuxtLink>
         </header>
@@ -86,23 +86,12 @@
       </div>
     </section>
 
-    <!-- Categories Section Commented Out - Only Music Events for now -->
-    <!-- 
+    <!-- Popular Artists Section -->
     <section class="py-16 bg-gray-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-bold text-white mb-8 text-center">
-          Explora por Categorías
-        </h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div class="bg-gray-900 rounded-lg p-6 text-center hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
-            <div class="text-4xl mb-4">🎵</div>
-            <h3 class="font-semibold text-white">Música</h3>
-            <p class="text-sm text-gray-400 mt-1">{{ events.length }} eventos</p>
-          </div>
-        </div>
+        <PopularArtistsList />
       </div>
     </section>
-    -->
   </div>
 </template>
 

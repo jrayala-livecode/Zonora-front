@@ -1,24 +1,24 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="objkt-container max-w-6xl">
+  <div class="py-4">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
-        <span class="ml-3 text-gray-600 text-lg">Cargando artista...</span>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <span class="ml-3 text-gray-400 text-lg">Cargando artista...</span>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
-        <h3 class="objkt-heading-lg text-red-600 mb-2">Error al cargar artista</h3>
-        <p class="objkt-text-muted mb-6">{{ error }}</p>
+        <h3 class="text-lg font-medium text-red-400 mb-2">Error al cargar artista</h3>
+        <p class="text-gray-400 mb-6">{{ error }}</p>
         <div class="flex justify-center space-x-4">
           <button
             @click="loadArtist"
-            class="objkt-btn objkt-btn-primary"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 transition-colors duration-200"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -27,7 +27,7 @@
           </button>
           <NuxtLink
             to="/artists"
-            class="objkt-btn objkt-btn-secondary"
+            class="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-lg text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
           >
             Volver a artistas
           </NuxtLink>
@@ -35,136 +35,211 @@
       </div>
 
       <!-- Artist Content -->
-      <div v-else-if="artist">
+      <div v-else-if="artist" class="space-y-4">
         <!-- Back Button -->
-        <div class="mb-6">
+        <div class="mb-4">
           <NuxtLink
             to="/artists"
-            class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            class="inline-flex items-center text-orange-500 hover:text-orange-400 transition-colors duration-200 text-sm"
           >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
             Volver a artistas
           </NuxtLink>
         </div>
 
-        <!-- Artist Header -->
-        <div class="objkt-card overflow-hidden mb-8">
-          <!-- Hero Image -->
-          <div class="relative h-64 md:h-80 bg-gradient-to-br from-gray-200 to-gray-300">
-            <img
-              v-if="artist.profile_picture_url"
-              :src="$convertImageUrl(artist.profile_picture_url)"
-              :alt="artist.stage_name"
-              class="w-full h-full object-cover"
-              @error="handleImageError"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <svg class="w-24 h-24 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-            </div>
-            
-            <!-- Status Badges -->
-            <div class="absolute top-4 right-4 flex flex-col space-y-2">
-              <span 
-                :class="[
-                  'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
-                  artist.is_public 
-                    ? 'bg-green-900/80 text-green-200' 
-                    : 'bg-red-900/80 text-red-200'
-                ]"
-              >
-                {{ artist.is_public ? 'Público' : 'Privado' }}
-              </span>
-              <span v-if="artist.has_active_subscription" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-900/80 text-orange-200">
-                Activo
-              </span>
-            </div>
-          </div>
-
-          <!-- Artist Info -->
-          <div class="p-8">
-            <div class="flex flex-col md:flex-row md:items-start md:justify-between">
-              <div class="flex-1">
-                <h1 class="text-4xl font-bold text-white mb-2">{{ artist.stage_name }}</h1>
-                <p v-if="artist.user" class="text-xl text-gray-400 mb-4">{{ artist.user.name }}</p>
-                
-                <!-- Genres -->
-                <div v-if="artist.genres && artist.genres.length > 0" class="mb-6">
-                  <div class="flex flex-wrap gap-2">
-                    <span 
-                      v-for="genre in artist.genres" 
-                      :key="genre"
-                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30"
-                    >
-                      {{ genre }}
-                    </span>
-                  </div>
-                </div>
+        <!-- Compact Grid Layout -->
+        <div class="space-y-3">
+          <!-- Row 1: Main Card -->
+          <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <!-- Hero Image -->
+            <div class="relative h-48 md:h-56 bg-gradient-to-br from-orange-500 to-red-600">
+              <img
+                v-if="artist.profile_picture_url"
+                :src="getImageUrl(artist.profile_picture_url)"
+                :alt="artist.stage_name"
+                class="w-full h-full object-cover object-center"
+                @error="handleImageError"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+              </div>
+              
+              <!-- Status Badges -->
+              <div class="absolute top-2 right-2 flex space-x-1">
+                <span 
+                  :class="[
+                    'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
+                    artist.is_public 
+                      ? 'bg-green-900/80 text-green-200' 
+                      : 'bg-red-900/80 text-red-200'
+                  ]"
+                >
+                  {{ artist.is_public ? 'Público' : 'Privado' }}
+                </span>
+                <span v-if="artist.has_active_subscription" class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-900/80 text-orange-200">
+                  Activo
+                </span>
               </div>
 
-              <!-- Action Buttons -->
-              <div class="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+              <!-- Message Button -->
+              <div v-if="!isOwner" class="absolute bottom-3 right-3">
                 <button
-                  class="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors duration-200"
+                  @click="startConversation"
+                  class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors duration-200 shadow-lg"
                 >
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                   </svg>
-                  Seguir
+                  Enviar Mensaje
                 </button>
               </div>
             </div>
 
-            <!-- Social Links Dropdown -->
-            <div v-if="showSocialLinks && artist.social_links && artist.social_links.length > 0" class="mt-6 p-4 bg-gray-700 rounded-lg">
-              <h3 class="text-lg font-semibold text-white mb-3">Enlaces Sociales</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <a
-                  v-for="(link, index) in artist.social_links"
-                  :key="index"
-                  :href="link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200"
-                >
-                  <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            <!-- Compact Info -->
+            <div class="p-3">
+              <h1 class="text-lg font-bold text-white mb-0.5">{{ artist.stage_name }}</h1>
+              <p v-if="artist.user" class="text-xs text-gray-400 mb-2">{{ artist.user.name }}</p>
+              
+              <!-- Genres -->
+              <div v-if="artist.genres && artist.genres.length > 0" class="mb-2">
+                <div class="flex flex-wrap gap-1">
+                  <span 
+                    v-for="genre in artist.genres.slice(0, 3)" 
+                    :key="genre"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-900/20 text-orange-300 border border-orange-700/30"
+                  >
+                    {{ genre }}
+                  </span>
+                  <span v-if="artist.genres.length > 3" class="text-xs text-gray-400">
+                    +{{ artist.genres.length - 3 }} más
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-2">
+                <FollowButton 
+                  :artist-id="artist.id" 
+                  :initial-follow-status="artist.follow_status?.is_following"
+                  @follow-changed="handleFollowChanged"
+                />
+                <button class="flex-1 inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded transition-colors duration-200">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                   </svg>
-                  {{ link }}
-                </a>
+                  Compartir
+                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Bio Section -->
-        <div v-if="artist.bio" class="bg-gray-800 rounded-xl shadow-xl mb-8">
-          <div class="p-8">
-            <h2 class="text-2xl font-bold text-white mb-4 flex items-center">
-              <svg class="w-6 h-6 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Biografía
-            </h2>
-            <p class="text-gray-300 leading-relaxed">{{ artist.bio }}</p>
+          <!-- Row 2: Bio, Genres, Links -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- Bio Card -->
+            <div v-if="artist.bio" class="bg-gray-800 rounded-lg shadow-lg p-3">
+              <h3 class="text-xs font-semibold text-white mb-1.5 flex items-center">
+                <div class="w-4 h-4 bg-orange-500 rounded flex items-center justify-center mr-1.5">
+                  <span class="text-white font-bold text-xs">📝</span>
+                </div>
+                Biografía
+              </h3>
+              <p class="text-gray-300 text-xs leading-relaxed line-clamp-3">{{ artist.bio }}</p>
+            </div>
+
+            <!-- Genres Card -->
+            <div v-if="artist.genres && artist.genres.length > 0" class="bg-gray-800 rounded-lg shadow-lg p-3">
+              <h3 class="text-xs font-semibold text-white mb-2 flex items-center">
+                <div class="w-4 h-4 bg-orange-500 rounded flex items-center justify-center mr-1.5">
+                  <span class="text-white font-bold text-xs">🎵</span>
+                </div>
+                Géneros
+              </h3>
+              <div class="flex flex-wrap gap-1">
+                <span 
+                  v-for="genre in artist.genres.slice(0, 4)" 
+                  :key="genre"
+                  class="px-1.5 py-0.5 bg-orange-900/20 text-orange-300 text-xs rounded border border-orange-700/30"
+                >
+                  {{ genre }}
+                </span>
+                <span v-if="artist.genres.length > 4" class="text-xs text-gray-400">
+                  +{{ artist.genres.length - 4 }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Artist Links Card -->
+            <div class="bg-gray-800 rounded-lg shadow-lg p-3">
+              <ArtistLinks :links="artistLinks" />
+            </div>
           </div>
-        </div>
 
-        <!-- Gallery Section -->
-        <div v-if="artist.image_ids && artist.image_ids.length > 0" class="bg-gray-800 rounded-xl shadow-xl mb-8">
-          <div class="p-8">
-            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-              <svg class="w-6 h-6 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Galería
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Followed Artists Card -->
+          <div v-if="artist.following && artist.following.length > 0" class="bg-gray-800 rounded-lg shadow-lg p-4">
+            <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
+              <div class="w-5 h-5 bg-orange-500 rounded flex items-center justify-center mr-2">
+                <span class="text-white font-bold text-xs">👥</span>
+              </div>
+              Artistas que sigue ({{ artist.following.length }})
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <NuxtLink 
+                v-for="followedArtist in artist.following.slice(0, 6)" 
+                :key="followedArtist.id"
+                :to="`/artists/${followedArtist.id}`"
+                class="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200"
+              >
+                <img 
+                  v-if="followedArtist.profile_picture_url"
+                  :src="getImageUrl(followedArtist.profile_picture_url)"
+                  :alt="followedArtist.stage_name"
+                  class="w-10 h-10 rounded-full object-cover"
+                  @error="handleImageError"
+                />
+                <div v-else class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-white truncate">{{ followedArtist.stage_name }}</p>
+                  <p v-if="followedArtist.genres && followedArtist.genres.length > 0" class="text-xs text-gray-400 truncate">
+                    {{ followedArtist.genres.slice(0, 2).join(', ') }}
+                  </p>
+                </div>
+              </NuxtLink>
+            </div>
+            <div v-if="artist.following.length > 6" class="mt-3 text-center">
+              <button class="text-xs text-orange-400 hover:text-orange-300">
+                Ver {{ artist.following.length - 6 }} más
+              </button>
+            </div>
+          </div>
+
+          <!-- Metrics Section (for artist owners) -->
+          <div v-if="isOwner && metrics" class="space-y-4">
+            <ArtistMetricsCard :metrics="metrics" />
+            
+            <div v-if="metrics.historical_metrics && metrics.historical_metrics.length > 0">
+              <ArtistMetricsChart :historical-metrics="metrics.historical_metrics" />
+            </div>
+          </div>
+
+          <!-- Gallery Card (if exists) -->
+          <div v-if="artist.image_ids && artist.image_ids.length > 0" class="bg-gray-800 rounded-lg shadow-lg p-4">
+            <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
+              <div class="w-5 h-5 bg-orange-500 rounded flex items-center justify-center mr-2">
+                <span class="text-white font-bold text-xs">🖼️</span>
+              </div>
+              Galería ({{ artist.image_ids.length }})
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div 
-                v-for="(imageId, index) in artist.image_ids" 
+                v-for="(imageId, index) in artist.image_ids.slice(0, 8)" 
                 :key="index" 
                 class="relative group cursor-pointer" 
                 @click="openImageModal(imageId)"
@@ -172,89 +247,23 @@
                 <img 
                   :src="getImageUrl(imageId)" 
                   :alt="`${artist.stage_name} - Imagen ${index + 1}`"
-                  class="w-full h-48 object-cover rounded-lg transition-transform duration-200 group-hover:scale-105"
+                  class="w-full h-20 object-cover rounded transition-transform duration-200 group-hover:scale-105"
                   @error="handleImageError"
                 />
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
-                  <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                   </svg>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Additional Links Section -->
-        <!-- Artist Links Section -->
-        <div class="bg-gray-800 rounded-xl shadow-xl mb-8">
-          <div class="p-8">
-            <ArtistLinks :links="artistLinks" />
-          </div>
-        </div>
-
-        <!-- Profile Information Section -->
-        <div class="bg-gray-800 rounded-xl shadow-xl mb-8">
-          <div class="p-8">
-            <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-              <svg class="w-6 h-6 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Información del Perfil
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Profile Status -->
-              <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                  <span class="text-gray-300">Estado del Perfil</span>
-                  <span :class="[
-                    'px-3 py-1 rounded-full text-sm font-medium',
-                    artist.is_public 
-                      ? 'bg-green-900/20 text-green-300 border border-green-700/30' 
-                      : 'bg-red-900/20 text-red-300 border border-red-700/30'
-                  ]">
-                    {{ artist.is_public ? 'Público' : 'Privado' }}
-                  </span>
-                </div>
-                
-                <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                  <span class="text-gray-300">Suscripción</span>
-                  <span :class="[
-                    'px-3 py-1 rounded-full text-sm font-medium',
-                    artist.has_active_subscription 
-                      ? 'bg-orange-900/20 text-orange-300 border border-orange-700/30' 
-                      : 'bg-gray-900/20 text-gray-300 border border-gray-700/30'
-                  ]">
-                    {{ artist.has_active_subscription ? 'Activa' : 'Inactiva' }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Profile Details -->
-              <div class="space-y-4">
-                <div class="p-4 bg-gray-700 rounded-lg">
-                  <span class="text-gray-300 block mb-2">Nombre Artístico</span>
-                  <span class="text-white font-medium">{{ artist.stage_name }}</span>
-                </div>
-                
-                <div v-if="artist.user" class="p-4 bg-gray-700 rounded-lg">
-                  <span class="text-gray-300 block mb-2">Usuario</span>
-                  <span class="text-white font-medium">{{ artist.user.name }}</span>
-                </div>
-                
-                <div v-if="artist.genres && artist.genres.length > 0" class="p-4 bg-gray-700 rounded-lg">
-                  <span class="text-gray-300 block mb-2">Géneros</span>
-                  <div class="flex flex-wrap gap-2 mt-2">
-                    <span 
-                      v-for="genre in artist.genres" 
-                      :key="genre"
-                      class="px-2 py-1 bg-orange-900/20 text-orange-300 text-xs rounded-full border border-orange-700/30"
-                    >
-                      {{ genre }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div v-if="artist.image_ids.length > 8" class="mt-2 text-center">
+              <button 
+                @click="openImageModal(artist.image_ids[0])"
+                class="text-xs text-orange-400 hover:text-orange-300"
+              >
+                Ver {{ artist.image_ids.length - 8 }} más
+              </button>
             </div>
           </div>
         </div>
@@ -283,13 +292,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watchEffect } from 'vue';
 
 const route = useRoute();
 const { getArtist } = useArtists();
+const { user } = useAuth();
 
 // Artist links functionality
 const { links: artistLinks, getLinks } = useArtistLinks();
+
+// Artist metrics functionality
+const { metrics, fetchArtistMetrics } = useArtistMetrics();
 
 // State
 const artist = ref<any>(null);
@@ -297,6 +310,11 @@ const loading = ref(true);
 const error = ref('');
 const showSocialLinks = ref(false);
 const selectedImage = ref('');
+
+// Computed
+const isOwner = computed(() => {
+  return user.value && artist.value && artist.value.user_id === user.value.id;
+});
 
 // Methods
 const loadArtist = async () => {
@@ -336,6 +354,27 @@ const openImageModal = (imageId: string) => {
 const closeImageModal = () => {
   selectedImage.value = '';
 };
+
+const handleFollowChanged = (isFollowing: boolean) => {
+  // Update the artist's follow status in the local state
+  if (artist.value && artist.value.follow_status) {
+    artist.value.follow_status.is_following = isFollowing;
+  }
+};
+
+const startConversation = () => {
+  if (!artist.value || !artist.value.user) return;
+  
+  // Navigate to chat with the artist's user ID
+  navigateTo(`/chat/${artist.value.user.id}`);
+};
+
+// Watch for artist changes to fetch metrics
+watchEffect(() => {
+  if (isOwner.value && artist.value) {
+    fetchArtistMetrics(artist.value.id);
+  }
+});
 
 // Lifecycle
 onMounted(() => {
