@@ -319,6 +319,8 @@
 
 <script setup lang="ts">
 import type { Event } from "~/composables/useEvents";
+import { useEvents } from "~/composables/useEvents";
+import { useEventInterest, type InterestedUser } from "~/composables/useEventInterest";
 import { ref, computed, watch, onMounted } from "vue";
 import {
   Calendar,
@@ -331,6 +333,7 @@ import {
 } from "lucide-vue-next";
 import { useRoute } from "vue-router";
 import MapLeaflet from "~/components/MapLeaflet.vue";
+import { useUserStore } from "~/store/user";
 
 const event = ref<Event | null | undefined>(null);
 const route = useRoute();
@@ -452,7 +455,7 @@ const structuredData = computed(() => {
 // Check if current user is the event owner
 const isEventOwner = computed(() => {
   const { user } = useUserStore()
-  return user.value && event.value && user.value.id === event.value.user_id
+  return user && event.value && user.id === event.value.user_id
 });
 
 // Breadcrumb structured data

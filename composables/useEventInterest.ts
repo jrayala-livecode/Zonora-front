@@ -1,9 +1,16 @@
 import { ref, computed } from 'vue'
 
+export interface InterestedUser {
+  id: number;
+  name: string;
+  avatar_url?: string;
+  created_at?: string;
+}
+
 export const useEventInterest = () => {
   const isInterested = ref(false)
   const interestedCount = ref(0)
-  const interestedUsers = ref([])
+  const interestedUsers = ref<InterestedUser[]>([])
   const loading = ref(false)
 
   const config = useRuntimeConfig()

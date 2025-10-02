@@ -24,6 +24,7 @@ export interface Event {
   attendees?: number;
   latitude?: number;
   longitude?: number;
+  user_id?: number;
   organizer?: Organizer;
   venue: Venue | null;
   artists?: Array<{
