@@ -76,9 +76,8 @@
 
           <!-- Interest Section -->
           <div class="mt-6 flex flex-col sm:flex-row gap-4">
-            <!-- Interest Button - Only show if user is logged in -->
+            <!-- Interest Button - Always clickable, redirects to login if not authenticated -->
             <button 
-              v-if="user" 
               @click="handleToggleInterest" 
               :disabled="loading" 
               :class="[
@@ -96,12 +95,6 @@
               <span v-else-if="isInterested">Ya no me interesa</span>
               <span v-else>Me gustaría asistir</span>
             </button>
-            
-            <!-- Login prompt for non-logged in users -->
-            <div v-else class="flex items-center justify-center px-6 py-3 rounded-lg bg-gray-700 text-gray-300">
-              <Heart class="w-5 h-5 mr-2" />
-              <span>Inicia sesión para mostrar interés</span>
-            </div>
 
             <div class="flex items-center text-gray-400 text-sm">
               <Users class="w-4 h-4 mr-2" />
@@ -402,18 +395,17 @@ const handleImageError = () => {
 };
 
 const handleToggleInterest = async () => {
+  // Check if user is logged in first
+  if (!user) {
+    redirectToLogin();
+    return;
+  }
+
   try {
     await toggleInterest(parseInt(eventId));
   } catch (error: any) {
     console.error('Error toggling interest:', error);
-    
-    // Show user-friendly error message
-    if (error.message === 'User must be logged in to toggle interest') {
-      // You could show a modal or toast here asking user to log in
-      alert('Debes iniciar sesión para mostrar interés en este evento');
-    } else {
-      alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
-    }
+    alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
   }
 };
 

@@ -1,5 +1,4 @@
 import { ref, computed } from 'vue'
-import { useUserStore } from '~/store/user'
 
 export interface InterestedUser {
   id: number;
@@ -13,7 +12,6 @@ export const useEventInterest = () => {
   const interestedCount = ref(0)
   const interestedUsers = ref<InterestedUser[]>([])
   const loading = ref(false)
-  const { user } = useUserStore()
 
   const config = useRuntimeConfig()
   let baseUrl = config.public.apiBaseUrl || 'http://localhost:8000'
@@ -27,13 +25,6 @@ export const useEventInterest = () => {
    * Check if user is interested in an event
    */
   const checkInterest = async (eventId: number) => {
-    // Don't make API call if user is not logged in
-    if (!user) {
-      isInterested.value = false
-      interestedCount.value = 0
-      return { interested: false, interested_count: 0 }
-    }
-
     try {
       loading.value = true
       const response = await fetch(`${baseUrl}/api/events/${eventId}/interest/check`, {
@@ -62,11 +53,6 @@ export const useEventInterest = () => {
    * Toggle interest in an event
    */
   const toggleInterest = async (eventId: number) => {
-    // Don't make API call if user is not logged in
-    if (!user) {
-      throw new Error('User must be logged in to toggle interest')
-    }
-
     try {
       loading.value = true
       const url = `${baseUrl}/api/events/${eventId}/toggle-interest`
@@ -98,11 +84,6 @@ export const useEventInterest = () => {
    * Add interest to an event
    */
   const addInterest = async (eventId: number) => {
-    // Don't make API call if user is not logged in
-    if (!user) {
-      throw new Error('User must be logged in to add interest')
-    }
-
     try {
       loading.value = true
       const response = await fetch(`${baseUrl}/api/events/${eventId}/interest`, {
@@ -133,11 +114,6 @@ export const useEventInterest = () => {
    * Remove interest from an event
    */
   const removeInterest = async (eventId: number) => {
-    // Don't make API call if user is not logged in
-    if (!user) {
-      throw new Error('User must be logged in to remove interest')
-    }
-
     try {
       loading.value = true
       const response = await fetch(`${baseUrl}/api/events/${eventId}/interest`, {
