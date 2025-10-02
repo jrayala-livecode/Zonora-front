@@ -76,12 +76,18 @@
 
           <!-- Interest Section -->
           <div class="mt-6 flex flex-col sm:flex-row gap-4">
-            <button @click="handleToggleInterest" :disabled="loading" :class="[
-              'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
-              isInterested
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-orange-600 hover:bg-orange-700 text-white'
-            ]">
+            <!-- Interest Button - Only show if user is logged in -->
+            <button 
+              v-if="user" 
+              @click="handleToggleInterest" 
+              :disabled="loading" 
+              :class="[
+                'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
+                isInterested
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-orange-600 hover:bg-orange-700 text-white'
+              ]"
+            >
               <Heart :class="[
                 'w-5 h-5 mr-2 transition-transform duration-200',
                 isInterested ? 'fill-current' : ''
@@ -90,6 +96,12 @@
               <span v-else-if="isInterested">Ya no me interesa</span>
               <span v-else>Me gustaría asistir</span>
             </button>
+            
+            <!-- Login prompt for non-logged in users -->
+            <div v-else class="flex items-center justify-center px-6 py-3 rounded-lg bg-gray-700 text-gray-300">
+              <Heart class="w-5 h-5 mr-2" />
+              <span>Inicia sesión para mostrar interés</span>
+            </div>
 
             <div class="flex items-center text-gray-400 text-sm">
               <Users class="w-4 h-4 mr-2" />
@@ -331,12 +343,13 @@ import {
   Heart,
   Share2,
 } from "lucide-vue-next";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import MapLeaflet from "~/components/MapLeaflet.vue";
 import { useUserStore } from "~/store/user";
 
 const event = ref<Event | null | undefined>(null);
 const route = useRoute();
+const router = useRouter();
 const { events, fetchEventsFromApi, getEventById } = useEvents();
 const config = useRuntimeConfig();
 
@@ -350,6 +363,9 @@ const {
   toggleInterest,
   getInterestedUsers
 } = useEventInterest();
+
+// Get user from store
+const { user } = useUserStore();
 
 const eventId = route.params.id as string;
 const isLoading = ref(true);
@@ -388,10 +404,22 @@ const handleImageError = () => {
 const handleToggleInterest = async () => {
   try {
     await toggleInterest(parseInt(eventId));
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error toggling interest:', error);
-    // You could add a toast notification here
+    
+    // Show user-friendly error message
+    if (error.message === 'User must be logged in to toggle interest') {
+      // You could show a modal or toast here asking user to log in
+      alert('Debes iniciar sesión para mostrar interés en este evento');
+    } else {
+      alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+    }
   }
+};
+
+const redirectToLogin = () => {
+  // Redirect to login page with return URL to come back to this event
+  router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`);
 };
 
 const formatDate = (dateString: string) => {
