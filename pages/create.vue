@@ -6,7 +6,221 @@
         <p class="text-gray-400">Completa todos los campos para crear tu evento musical</p>
       </header>
 
-      <form @submit.prevent="createEventHandler" class="space-y-8" novalidate aria-label="Formulario de creación de evento">
+      <!-- Step Progress Indicator -->
+      <div class="mb-8">
+        <div class="flex items-center justify-center space-x-6">
+          <div class="flex items-center">
+            <div :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold',
+              currentStep >= 1 ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-400'
+            ]">
+              1
+            </div>
+            <span :class="[
+              'ml-2 text-sm font-medium',
+              currentStep >= 1 ? 'text-white' : 'text-gray-400'
+            ]">
+              Tipo de Evento
+            </span>
+          </div>
+          
+          <div class="w-12 h-1 bg-gray-700 rounded">
+            <div 
+              :class="[
+                'h-full bg-orange-500 rounded transition-all duration-300',
+                currentStep >= 2 ? 'w-full' : 'w-0'
+              ]"
+            ></div>
+          </div>
+          
+          <div class="flex items-center">
+            <div :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold',
+              currentStep >= 2 ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-400'
+            ]">
+              2
+            </div>
+            <span :class="[
+              'ml-2 text-sm font-medium',
+              currentStep >= 2 ? 'text-white' : 'text-gray-400'
+            ]">
+              Información
+            </span>
+          </div>
+
+          <div class="w-12 h-1 bg-gray-700 rounded">
+            <div 
+              :class="[
+                'h-full bg-orange-500 rounded transition-all duration-300',
+                currentStep >= 3 ? 'w-full' : 'w-0'
+              ]"
+            ></div>
+          </div>
+          
+          <div class="flex items-center">
+            <div :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold',
+              currentStep >= 3 ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-400'
+            ]">
+              3
+            </div>
+            <span :class="[
+              'ml-2 text-sm font-medium',
+              currentStep >= 3 ? 'text-white' : 'text-gray-400'
+            ]">
+              Precios*
+            </span>
+          </div>
+
+          <div class="w-12 h-1 bg-gray-700 rounded">
+            <div 
+              :class="[
+                'h-full bg-orange-500 rounded transition-all duration-300',
+                currentStep >= 4 ? 'w-full' : 'w-0'
+              ]"
+            ></div>
+          </div>
+          
+          <div class="flex items-center">
+            <div :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold',
+              currentStep >= 4 ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-400'
+            ]">
+              4
+            </div>
+            <span :class="[
+              'ml-2 text-sm font-medium',
+              currentStep >= 4 ? 'text-white' : 'text-gray-400'
+            ]">
+              Términos
+            </span>
+          </div>
+        </div>
+        <p class="text-center text-xs text-gray-500 mt-2">* Solo para eventos monetizados</p>
+      </div>
+
+      <!-- Step 1: Event Type Selection -->
+      <div v-if="currentStep === 1" class="space-y-8">
+        <div class="max-w-4xl mx-auto">
+          <div class="card">
+            <h2 class="text-2xl font-semibold text-white mb-6 text-center">
+              ¿Qué tipo de evento quieres crear?
+            </h2>
+            
+            <div class="space-y-4">
+              <label class="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-orange-500 transition-colors cursor-pointer group">
+                <input 
+                  v-model="eventType" 
+                  type="radio" 
+                  value="free"
+                  class="mt-1 w-5 h-5 text-orange-500 bg-gray-600 border-gray-500 focus:ring-orange-500 focus:ring-2"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-white group-hover:text-orange-400 transition-colors">
+                    Evento Gratuito
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1">
+                    El evento es completamente gratuito. Los usuarios pueden obtener códigos QR y asistir sin costo.
+                  </p>
+                </div>
+              </label>
+
+              <label class="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-orange-500 transition-colors cursor-pointer group">
+                <input 
+                  v-model="eventType" 
+                  type="radio" 
+                  value="view_only"
+                  class="mt-1 w-5 h-5 text-orange-500 bg-gray-600 border-gray-500 focus:ring-orange-500 focus:ring-2"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-white group-hover:text-orange-400 transition-colors">
+                    Evento Monetizado - Solo Visualización
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1">
+                    Los usuarios pueden ver el precio pero no comprar boletos directamente en la app.
+                  </p>
+                </div>
+              </label>
+
+              <label class="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-orange-500 transition-colors cursor-pointer group">
+                <input 
+                  v-model="eventType" 
+                  type="radio" 
+                  value="pay_at_door"
+                  class="mt-1 w-5 h-5 text-orange-500 bg-gray-600 border-gray-500 focus:ring-orange-500 focus:ring-2"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-white group-hover:text-orange-400 transition-colors">
+                    Pago en Puerta / Contactar Organizador
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1">
+                    Los usuarios pueden contactarte para información de pago. Se redirigirán a tu Instagram.
+                  </p>
+                </div>
+              </label>
+
+              <label class="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-orange-500 transition-colors cursor-pointer group">
+                <input 
+                  v-model="eventType" 
+                  type="radio" 
+                  value="in_app"
+                  class="mt-1 w-5 h-5 text-orange-500 bg-gray-600 border-gray-500 focus:ring-orange-500 focus:ring-2"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-white group-hover:text-orange-400 transition-colors">
+                    Compra Directa en la App
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1">
+                    Los usuarios pueden comprar boletos directamente con transferencia bancaria. Requiere verificación.
+                  </p>
+                </div>
+              </label>
+
+              <label class="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-orange-500 transition-colors cursor-pointer group">
+                <input 
+                  v-model="eventType" 
+                  type="radio" 
+                  value="not_mine"
+                  class="mt-1 w-5 h-5 text-orange-500 bg-gray-600 border-gray-500 focus:ring-orange-500 focus:ring-2"
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-white group-hover:text-orange-400 transition-colors">
+                    Este Evento No Es Mío
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1">
+                    Estoy compartiendo un evento que encontré en la ciudad. No soy el organizador.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Step 1 Continue Button -->
+            <div class="flex justify-center pt-8">
+              <button 
+                @click="nextStep"
+                type="button"
+                class="btn-primary text-lg px-12 py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!eventType"
+                aria-label="Continuar al siguiente paso"
+              >
+                <span class="flex items-center">
+                  Continuar
+                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+            
+            <p v-if="!eventType" class="text-center text-sm text-orange-400 mt-4">
+              Selecciona un tipo de evento para continuar
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Event Information -->
+      <div v-if="currentStep === 2" class="space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Información Básica -->
           <section class="card" aria-labelledby="basic-info-heading">
@@ -71,6 +285,26 @@
                 />
                 <div id="links-help" class="sr-only">Agrega enlaces adicionales con información del evento</div>
               </div>
+
+              <!-- Event Source Field (only for "not_mine" events) -->
+              <div v-if="eventType === 'not_mine'">
+                <label for="event-source" class="block text-sm font-medium text-gray-300 mb-2">¿Cómo encontraste este evento? *</label>
+                <select 
+                  id="event-source"
+                  v-model="form.event_source" 
+                  class="input-field w-full"
+                  required
+                  aria-describedby="event-source-help"
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="redes_sociales">Redes Sociales</option>
+                  <option value="pagina_web">Página Web</option>
+                  <option value="cartel">Cartel/Publicidad</option>
+                  <option value="amigo">Amigo/Familiar</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <div id="event-source-help" class="sr-only">Indica cómo descubriste este evento</div>
+              </div>
             </div>
           </section>
 
@@ -111,7 +345,7 @@
                 <div id="event-time-help" class="sr-only">Especifica la hora de inicio del evento</div>
               </div>
 
-              <div>
+              <div v-if="eventType !== 'not_mine'">
                 <label for="publish-date" class="block text-sm font-medium text-gray-300 mb-2">Fecha de Publicación</label>
                 <input 
                   id="publish-date"
@@ -122,6 +356,7 @@
                 />
                 <p id="publish-date-help" class="text-xs text-gray-500 mt-1">Deja vacío para publicar inmediatamente</p>
               </div>
+
             </div>
           </section>
 
@@ -266,37 +501,53 @@
             </div>
           </section>
 
-          <!-- Precios -->
-          <section class="card" aria-labelledby="pricing-heading">
-            <h2 id="pricing-heading" class="text-xl font-semibold text-white mb-6 flex items-center">
-              <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3" aria-hidden="true">
-                <span class="text-white font-bold">6</span>
-              </div>
-              Precios
-            </h2>
-            
-            <div class="space-y-6">
-              <!-- Publicar Precios Toggle -->
-              <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div>
-                  <h3 class="text-lg font-medium text-white mb-1">Monetización</h3>
-                  <p class="text-sm text-gray-400">Permite a los usuarios ver los precios del evento</p>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    v-model="form.show_prices" 
-                    type="checkbox" 
-                    class="sr-only peer"
-                    aria-describedby="pricing-toggle-help"
-                  />
-                  <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                </label>
-              </div>
-              <div id="pricing-toggle-help" class="sr-only">Activa esta opción para mostrar los precios públicamente</div>
+        </div>
 
-              <!-- Precios del Evento -->
-              <div v-if="form.show_prices" class="space-y-4">
-                <!-- Moneda -->
+        <!-- Step 2 Continue Button -->
+        <div class="flex justify-center pt-8">
+          <button 
+            @click="nextStep"
+            type="button"
+            class="btn-primary text-lg px-12 py-4"
+            aria-label="Continuar al siguiente paso"
+          >
+            <span class="flex items-center">
+              Continuar
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Pricing (Conditional) -->
+      <div v-if="currentStep === 3" class="space-y-8">
+        <form @submit.prevent="nextStep" novalidate>
+          <div class="max-w-4xl mx-auto">
+            <!-- Back Button -->
+            <div class="mb-6">
+              <button 
+                @click="previousStep"
+                type="button"
+                class="flex items-center text-gray-400 hover:text-white transition-colors duration-200"
+                aria-label="Volver al paso anterior"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Volver a la información del evento
+              </button>
+            </div>
+
+            <!-- Pricing Section -->
+            <div class="card">
+              <h2 class="text-2xl font-semibold text-white mb-6 text-center">
+                Configurar Precios
+              </h2>
+              
+              <div class="space-y-6">
+                <!-- Currency Selection -->
                 <div>
                   <label for="currency" class="block text-sm font-medium text-gray-300 mb-2">
                     Moneda ({{ currencySymbol }} {{ form.currency }})
@@ -318,8 +569,47 @@
                   <p id="currency-help" class="text-xs text-gray-500 mt-1">Selecciona la moneda para los precios</p>
                 </div>
 
-                <!-- Custom Price Tiers -->
-                <div>
+                <!-- Single Price for View Only -->
+                <div v-if="eventType === 'view_only'">
+                  <h3 class="text-lg font-medium text-white mb-4">Precio de Visualización</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label for="single-price-name" class="block text-sm font-medium text-gray-300 mb-2">
+                        Nombre del Precio
+                      </label>
+                      <input 
+                        id="single-price-name"
+                        v-model="singlePriceName"
+                        type="text" 
+                        placeholder="Ej: General, VIP"
+                        class="input-field w-full"
+                        required
+                        @blur="handleSinglePriceNameBlur"
+                      />
+                    </div>
+                    <div>
+                      <label for="single-price-amount" class="block text-sm font-medium text-gray-300 mb-2">
+                        Precio ({{ currencySymbol }})
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">{{ currencySymbol }}</span>
+                        <input 
+                          id="single-price-amount"
+                          v-model="singlePriceAmount"
+                          type="number" 
+                          min="0" 
+                          step="0.01"
+                          :placeholder="currencyPlaceholder" 
+                          class="input-field w-full pl-8"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Multiple Price Tiers for In-App Purchase -->
+                <div v-else-if="eventType === 'in_app'">
                   <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium text-white">Niveles de Precio</h3>
                     <button 
@@ -356,7 +646,6 @@
                       </div>
 
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Tier Name -->
                         <div>
                           <label :for="`tier-name-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
                             Nombre del Nivel
@@ -368,10 +657,10 @@
                             placeholder="Ej: General, VIP, Estudiantil"
                             class="input-field w-full"
                             required
+                            @blur="handlePriceTierNameBlur(index)"
                           />
                         </div>
 
-                        <!-- Tier Price -->
                         <div>
                           <label :for="`tier-price-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
                             Precio ({{ currencySymbol }})
@@ -392,7 +681,6 @@
                         </div>
                       </div>
 
-                      <!-- Tier Description -->
                       <div class="mt-4">
                         <label :for="`tier-description-${index}`" class="block text-sm font-medium text-gray-300 mb-2">
                           Descripción (Opcional)
@@ -401,12 +689,11 @@
                           :id="`tier-description-${index}`"
                           v-model="tier.description"
                           rows="2" 
-                          placeholder="Ej: Incluye una bebida, Acceso a área VIP, Descuento para estudiantes"
+                          placeholder="Ej: Incluye una bebida, Acceso a área VIP"
                           class="input-field w-full resize-none"
                         ></textarea>
                       </div>
 
-                      <!-- Active Toggle -->
                       <div class="mt-4 flex items-center justify-between">
                         <div>
                           <span class="text-sm font-medium text-gray-300">Precio Activo</span>
@@ -427,37 +714,133 @@
                 </div>
               </div>
 
-              <!-- Mensaje cuando no se publican precios -->
-              <div v-else class="p-4 bg-gray-700 rounded-lg text-center">
-                <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <p class="text-gray-400">Los precios no se mostrarán públicamente</p>
-                <p class="text-sm text-gray-500 mt-1">Los usuarios podrán contactarte para información de precios</p>
+              <!-- Step 3 Continue Button -->
+              <div class="flex justify-center pt-8">
+                <button 
+                  type="submit"
+                  class="btn-primary text-lg px-12 py-4"
+                  aria-label="Continuar a términos y condiciones"
+                >
+                  <span class="flex items-center">
+                    Continuar a Términos
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </button>
               </div>
             </div>
-          </section>
+          </div>
+        </form>
+      </div>
 
-        </div>
+      <!-- Step 4: Terms and Conditions -->
+      <div v-if="currentStep === 4" class="space-y-8">
+        <form @submit.prevent="createEventHandler" novalidate aria-label="Formulario de creación de evento">
+          <div class="max-w-4xl mx-auto">
+            <!-- Back Button -->
+            <div class="mb-6">
+              <button 
+                @click="previousStep"
+                type="button"
+                class="flex items-center text-gray-400 hover:text-white transition-colors duration-200"
+                aria-label="Volver al paso anterior"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Volver a la información del evento
+              </button>
+            </div>
 
-        <div class="flex justify-center pt-8">
-          <button 
-            type="submit" 
-            class="btn-primary text-lg px-12 py-4" 
-            :disabled="isSubmitting"
-            :aria-label="isSubmitting ? 'Creando evento, por favor espera' : 'Crear evento musical'"
-          >
-            <span v-if="isSubmitting" class="flex items-center">
-              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" aria-hidden="true"></div>
-              Creando evento...
-            </span>
-            <span v-else class="flex items-center">
-              <Calendar class="w-5 h-5 mr-2" aria-hidden="true" />
-              Crear Evento
-            </span>
-          </button>
-        </div>
-      </form>
+            <!-- Descargo de Responsabilidad -->
+            <div class="p-6 bg-gray-700 border border-gray-600 rounded-lg">
+              <h2 class="text-2xl font-semibold text-orange-400 mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Descargo de Responsabilidad
+              </h2>
+              
+              <!-- Special disclaimer for shared events -->
+              <div v-if="eventType === 'not_mine'" class="mb-6 p-4 bg-yellow-900 border border-yellow-700 rounded-lg">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-3 flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Evento Compartido
+                </h3>
+                <p class="text-yellow-200 text-sm">
+                  <strong>Importante:</strong> Estás compartiendo un evento que no es tuyo. Declaras que no eres el organizador 
+                  y que toda la información proporcionada es verídica según tu conocimiento. La responsabilidad del evento 
+                  recae completamente en los organizadores originales.
+                </p>
+              </div>
+              
+              <div class="space-y-4 text-gray-300">
+                <p class="text-lg">Al continuar, confirmas que entiendes y aceptas que:</p>
+                
+                <ul class="list-disc list-inside space-y-3 pl-4 text-base">
+                  <li>Esta aplicación actúa únicamente como plataforma de difusión de eventos creados por usuarios.</li>
+                  <li>Los organizadores son plenamente responsables de la veracidad, seguridad y cumplimiento legal de los eventos que publican.</li>
+                  <li>Los asistentes participan bajo su propio riesgo. La app y sus administradores no asumen responsabilidad por accidentes, daños, pérdidas o cualquier otro perjuicio ocurrido antes, durante o después del evento.</li>
+                  <li>El uso de esta plataforma implica la aceptación total de estos términos y de la Política de Privacidad disponible en el sitio o aplicación.</li>
+                  <li>En caso de incumplimiento o fraude, el usuario podrá ser suspendido o eliminado permanentemente de la plataforma.</li>
+                </ul>
+              </div>
+
+              <div class="mt-8 pt-6 border-t border-gray-600">
+                <label class="flex items-start space-x-4 cursor-pointer group">
+                  <input 
+                    v-model="termsAccepted" 
+                    type="checkbox" 
+                    class="mt-1 w-6 h-6 text-orange-500 bg-gray-600 border-gray-500 rounded focus:ring-orange-500 focus:ring-2"
+                    required
+                    aria-describedby="terms-help"
+                  />
+                  <span class="text-gray-200 group-hover:text-white transition-colors text-lg">
+                    <strong>Acepto los términos y condiciones</strong> y el descargo de responsabilidad. Declaro que soy el organizador responsable de este evento y que toda la información proporcionada es verídica.
+                  </span>
+                </label>
+                <div id="terms-help" class="sr-only">Debes aceptar los términos y condiciones para poder crear el evento</div>
+                
+                <p v-if="!termsAccepted" class="mt-3 text-orange-400">
+                  * Debes aceptar los términos para poder publicar el evento
+                </p>
+              </div>
+            </div>
+
+            <!-- Step 2 Create Event Button -->
+            <div class="flex flex-col items-center pt-8 space-y-3">
+              <button 
+                type="submit" 
+                class="btn-primary text-lg px-12 py-4 disabled:opacity-50 disabled:cursor-not-allowed" 
+                :disabled="isSubmitting || !termsAccepted"
+                :aria-label="isSubmitting ? 'Creando evento, por favor espera' : !termsAccepted ? 'Debes aceptar los términos y condiciones' : 'Crear evento musical'"
+              >
+                <span v-if="isSubmitting" class="flex items-center">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" aria-hidden="true"></div>
+                  Creando evento...
+                </span>
+                <span v-else class="flex items-center">
+                  <Calendar class="w-5 h-5 mr-2" aria-hidden="true" />
+                  Crear Evento
+                </span>
+              </button>
+              <p v-if="!termsAccepted && !isSubmitting" class="text-sm text-orange-400 text-center">
+                Debes aceptar los términos y condiciones para poder publicar el evento
+              </p>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Verification Modal -->
+      <VerificationModal 
+        :is-open="showVerificationModal"
+        @close="showVerificationModal = false"
+        @verified="handleVerificationComplete"
+      />
     </div>
   </div>
 </template>
@@ -474,13 +857,16 @@ import { Upload, X, Calendar, Plus, Trash2 } from 'lucide-vue-next';
 import { reactive, ref, watch } from 'vue';
 import { useEvents } from '~/composables/useEvents';
 import { useModal } from '~/composables/useModal';
+import { useVerification } from '~/composables/useVerification';
 import { useUserStore } from '~/store/user';
 import { useRouter } from 'vue-router';
 import type { Artist } from '~/composables/types/types';
+import VerificationModal from '~/components/VerificationModal.vue';
 
 const router = useRouter();
 const { isAuthenticated } = useAuth();
 const { createEvent } = useEvents();
+const { checkVerificationStatus, isVerificationApproved } = useVerification();
 const token = useUserStore().token;
 const config = useRuntimeConfig();
 
@@ -521,6 +907,8 @@ const form = reactive({
   show_prices: false,
   priceTiers: [] as PriceTier[],
   currency: 'USD',
+  // New monetization fields
+  event_source: '',
 });
 
 const selectedMapLocation = ref<{ lat: number; lng: number } | null>(null)
@@ -575,6 +963,34 @@ const currencyPlaceholder = computed(() => {
 const isSubmitting = ref(false);
 const selectedFile = ref<File | null>(null);
 const imagePreview = ref(form.image || '');
+const termsAccepted = ref(false);
+const currentStep = ref(1);
+const eventType = ref('');
+const singlePriceName = ref('');
+const singlePriceAmount = ref(0);
+const showVerificationModal = ref(false);
+
+// Helper function to capitalize words for preview
+const capitalizeWordsPreview = (str: string): string => {
+  return str.trim()
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Blur handlers for price name capitalization preview
+const handleSinglePriceNameBlur = () => {
+  if (singlePriceName.value) {
+    singlePriceName.value = capitalizeWordsPreview(singlePriceName.value);
+  }
+};
+
+const handlePriceTierNameBlur = (index: number) => {
+  if (form.priceTiers[index].name) {
+    form.priceTiers[index].name = capitalizeWordsPreview(form.priceTiers[index].name);
+  }
+};
 
 // Price tier management
 let priceTierIdCounter = 0;
@@ -605,6 +1021,127 @@ const setActiveTier = (index: number) => {
   });
 };
 
+// Step navigation
+const nextStep = async () => {
+  if (currentStep.value === 1) {
+    if (!eventType.value) {
+      useModal().showError('Error de validación', 'Debes seleccionar un tipo de evento.');
+      return;
+    }
+    currentStep.value = 2;
+  } else if (currentStep.value === 2) {
+    if (validateStep2()) {
+      // Skip pricing step for certain event types
+      if (shouldSkipPricingStep()) {
+        currentStep.value = 4; // Go directly to terms
+      } else {
+        currentStep.value = 3; // Go to pricing
+      }
+    }
+  } else if (currentStep.value === 3) {
+    const isValid = await validateStep3();
+    if (isValid) {
+      currentStep.value = 4;
+    }
+  }
+};
+
+const previousStep = () => {
+  if (currentStep.value === 2) {
+    currentStep.value = 1;
+  } else if (currentStep.value === 3) {
+    currentStep.value = 2;
+  } else if (currentStep.value === 4) {
+    // Go back to pricing if it exists, otherwise to step 2
+    if (shouldSkipPricingStep()) {
+      currentStep.value = 2;
+    } else {
+      currentStep.value = 3;
+    }
+  }
+};
+
+const shouldSkipPricingStep = () => {
+  return ['free', 'pay_at_door', 'not_mine'].includes(eventType.value);
+};
+
+const validateStep2 = () => {
+  // Validate required fields for step 2
+  if (!form.name.trim()) {
+    useModal().showError('Error de validación', 'El nombre del evento es requerido.');
+    return false;
+  }
+  if (!form.description.trim()) {
+    useModal().showError('Error de validación', 'La descripción del evento es requerida.');
+    return false;
+  }
+  if (!form.date) {
+    useModal().showError('Error de validación', 'La fecha del evento es requerida.');
+    return false;
+  }
+  if (!form.time) {
+    useModal().showError('Error de validación', 'La hora del evento es requerida.');
+    return false;
+  }
+  if (!form.location.trim()) {
+    useModal().showError('Error de validación', 'El nombre del lugar es requerido.');
+    return false;
+  }
+  if (!form.address.trim()) {
+    useModal().showError('Error de validación', 'La dirección es requerida.');
+    return false;
+  }
+  // Validate event source for "not_mine" events
+  if (eventType.value === 'not_mine' && !form.event_source) {
+    useModal().showError('Error de validación', 'Debes indicar cómo encontraste este evento.');
+    return false;
+  }
+  return true;
+};
+
+const validateStep3 = async () => {
+  // Validate pricing step
+  if (eventType.value === 'view_only') {
+    if (!singlePriceName.value.trim() || singlePriceAmount.value <= 0) {
+      useModal().showError('Error de validación', 'Debes completar el precio de visualización.');
+      return false;
+    }
+  } else if (eventType.value === 'in_app') {
+    if (form.priceTiers.length === 0) {
+      useModal().showError('Error de validación', 'Debes agregar al menos un precio.');
+      return false;
+    }
+    // Validate that all price tiers have required fields
+    for (const tier of form.priceTiers) {
+      if (!tier.name.trim()) {
+        useModal().showError('Error de validación', 'Todos los precios deben tener un nombre.');
+        return false;
+      }
+      if (tier.price < 0) {
+        useModal().showError('Error de validación', 'Los precios no pueden ser negativos.');
+        return false;
+      }
+    }
+    
+    // Check verification status for in-app purchases
+    try {
+      const verificationStatus = await checkVerificationStatus();
+      if (!isVerificationApproved()) {
+        useModal().showError(
+          'Verificación Requerida',
+          'Para crear eventos con compra directa en la app, necesitas verificar tu identidad primero.'
+        );
+        showVerificationModal.value = true;
+        return false;
+      }
+    } catch (error) {
+      useModal().showError('Error', 'No se pudo verificar el estado de verificación.');
+      return false;
+    }
+  }
+  return true;
+};
+
 
 const onImageSelected = (e: Event) => {
   const input = e.target as HTMLInputElement;
@@ -627,6 +1164,12 @@ const removeImage = () => {
   imagePreview.value = '';
 };
 
+const handleVerificationComplete = () => {
+  showVerificationModal.value = false;
+  // Continue to terms step
+  currentStep.value = 4;
+};
+
 const createEventHandler = async () => {
   isSubmitting.value = true;
   try {
@@ -642,6 +1185,12 @@ const createEventHandler = async () => {
     formData.append('longitude', form.longitude?.toString() || '');
     formData.append('hidden_location', form.hidden_location ? '1' : '0');
     formData.append('reveal_location_at', form.reveal_location_at || '');
+
+    // Add new monetization fields
+    formData.append('monetization_type', eventType.value);
+    if (form.event_source) {
+      formData.append('event_source', form.event_source);
+    }
 
     form.hashtags
       .split(' ')
@@ -662,22 +1211,48 @@ const createEventHandler = async () => {
       formData.append('artists[]', artist.id.toString());
     });
 
-    // Pricing data
-    formData.append('show_prices', form.show_prices ? '1' : '0');
-    if (form.show_prices) {
-      formData.append('currency', form.currency);
-      
-      // Convert price tiers to the format expected by the API
+    // Helper function to capitalize first letter of each word
+    const capitalizeWords = (str: string): string => {
+      return str.trim()
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
+
+    // Pricing data based on event type
+    if (eventType.value === 'view_only') {
+      // Single price for view only
+      const singlePrice = {
+        name: capitalizeWords(singlePriceName.value),
+        price: parseFloat(singlePriceAmount.value.toString()),
+        currency: form.currency,
+        active: true,
+        info: 'Precio solo para visualización'
+      };
+      formData.append('prices', JSON.stringify([singlePrice]));
+    } else if (eventType.value === 'in_app') {
+      // Multiple price tiers for in-app purchase
       const prices = form.priceTiers.map(tier => ({
-        name: tier.name,
+        name: capitalizeWords(tier.name),
         price: parseFloat(tier.price.toString()),
         currency: form.currency,
         active: tier.active,
         info: tier.description || undefined
       }));
-      
       formData.append('prices', JSON.stringify(prices));
+    } else if (eventType.value === 'free') {
+      // Free event
+      const freePrice = {
+        name: 'Gratis',
+        price: 0,
+        currency: form.currency,
+        active: true,
+        info: 'Evento gratuito'
+      };
+      formData.append('prices', JSON.stringify([freePrice]));
     }
+    // For 'pay_at_door' and 'not_mine', no pricing data needed
 
     if (selectedFile.value) {
       formData.append('image', selectedFile.value);
