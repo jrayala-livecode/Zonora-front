@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Sanitization Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-case {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .original {
+            background: #3a3a3a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .sanitized {
+            background: #4a4a4a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .safe {
+            color: #4ade80;
+        }
+        .dangerous {
+            color: #f87171;
+        }
+        h1, h2 {
+            color: #f97316;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Sanitization Test</h1>
+    <p>Testing DOMPurify configuration for safe HTML rendering in messages.</p>
+
+    <div class="test-case">
+        <h2>Test 1: Safe HTML Links (Should Work)</h2>
+        <div class="original">
+            <strong>Original:</strong><br>
+            <code>&lt;a href="http://localhost:3000/invitations" target="_blank" style="color: #f97316;"&gt;View Invitations&lt;/a&gt;</code>
+        </div>
+        <div class="sanitized">
+            <strong>Sanitized:</strong><br>
+            <span id="test1"></span>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h2>Test 2: Dangerous Script (Should Be Blocked)</h2>
+        <div class="original">
+            <strong>Original:</strong><br>
+            <code>&lt;script&gt;alert('XSS Attack!')&lt;/script&gt;&lt;a href="/invitations"&gt;Safe Link&lt;/a&gt;</code>
+        </div>
+        <div class="sanitized">
+            <strong>Sanitized:</strong><br>
+            <span id="test2"></span>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h2>Test 3: Mixed Content (Links Should Work, Scripts Blocked)</h2>
+        <div class="original">
+            <strong>Original:</strong><br>
+            <code>Hello &lt;script&gt;alert('XSS')&lt;/script&gt; &lt;a href="http://localhost:3000/invitations"&gt;View Invitations&lt;/a&gt; &lt;iframe src="evil.com"&gt;&lt;/iframe&gt;</code>
+        </div>
+        <div class="sanitized">
+            <strong>Sanitized:</strong><br>
+            <span id="test3"></span>
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h2>Test 4: Real Invitation Message</h2>
+        <div class="original">
+            <strong>Original:</strong><br>
+            <code>You have been invited to participate in the event 'Electronic Night Vol. 2' by Administrator.<br><br>Message: ¡Hola! Esta es una prueba del sistema de invitaciones con enlaces HTML.<br><br>Event Date: Oct 09, 2025 22:00<br><br>Please visit your invitations page to accept or reject this invitation:<br><br>&lt;a href="http://localhost:3000/invitations" target="_blank" style="color: #f97316; text-decoration: underline;"&gt;View Invitations&lt;/a&gt;</code>
+        </div>
+        <div class="sanitized">
+            <strong>Sanitized:</strong><br>
+            <span id="test4"></span>
+        </div>
+    </div>
+
+    <script>
+        // DOMPurify configuration (same as in MessageList.vue)
+        const sanitizeMessage = (html) => {
+            if (!html) return '';
+            
+            return DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['a', 'br', 'strong', 'em', 'p', 'div', 'span', 'b', 'i', 'u'],
+                ALLOWED_ATTR: ['href', 'target', 'style', 'class', 'title'],
+                ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|#):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+                FORBID_ATTR: ['onload', 'onerror', 'onclick', 'onmouseover', 'onfocus', 'onblur']
+            });
+        };
+
+        // Test cases
+        const testCases = [
+            {
+                id: 'test1',
+                input: '<a href="http://localhost:3000/invitations" target="_blank" style="color: #f97316;">View Invitations</a>'
+            },
+            {
+                id: 'test2',
+                input: '<script>alert("XSS Attack!")</script><a href="/invitations">Safe Link</a>'
+            },
+            {
+                id: 'test3',
+                input: 'Hello <script>alert("XSS")</script> <a href="http://localhost:3000/invitations">View Invitations</a> <iframe src="evil.com"></iframe>'
+            },
+            {
+                id: 'test4',
+                input: `You have been invited to participate in the event 'Electronic Night Vol. 2' by Administrator.<br><br>Message: ¡Hola! Esta es una prueba del sistema de invitaciones con enlaces HTML.<br><br>Event Date: Oct 09, 2025 22:00<br><br>Please visit your invitations page to accept or reject this invitation:<br><br><a href="http://localhost:3000/invitations" target="_blank" style="color: #f97316; text-decoration: underline;">View Invitations</a>`
+            }
+        ];
+
+        // Run tests
+        testCases.forEach(test => {
+            const sanitized = sanitizeMessage(test.input);
+            document.getElementById(test.id).innerHTML = sanitized;
+            
+            // Check if links are preserved
+            const hasLinks = sanitized.includes('<a href=');
+            const hasScripts = sanitized.includes('<script');
+            const hasIframes = sanitized.includes('<iframe');
+            
+            const status = hasLinks && !hasScripts && !hasIframes ? 'safe' : 'dangerous';
+            document.getElementById(test.id).className = status;
+        });
+
+        console.log('Sanitization tests completed!');
+    </script>
+</body>
+</html>

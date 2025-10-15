@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-900 flex" style="height: calc(100vh - 48px);">
+  <div class="bg-gray-900 flex overflow-hidden" style="height: calc(100vh - 64px);">
     <!-- Back Button -->
     <div class="absolute top-3 left-3 z-10">
       <NuxtLink 
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Chat with Specific User -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col h-full">
       <!-- Chat Header -->
       <div class="bg-gray-800 border-b border-gray-700 p-3">
         <div class="flex items-center space-x-2.5">
@@ -32,19 +32,23 @@
       </div>
 
         <!-- Messages Area -->
-        <div class="flex-1 flex flex-col">
-          <MessageList
-            :messages="messagesWithUser"
-            :loading="loading"
-            :error="error"
-            :current-user-id="currentUserId"
-          />
+        <div class="flex-1 flex flex-col min-h-0">
+          <div class="flex-1 min-h-0">
+            <MessageList
+              :messages="messagesWithUser"
+              :loading="loading"
+              :error="error"
+              :current-user-id="currentUserId"
+            />
+          </div>
 
           <!-- Message Input -->
-          <MessageInput
-            :receiver-id="userId"
-            @message-sent="handleMessageSent"
-          />
+          <div class="flex-shrink-0">
+            <MessageInput
+              :receiver-id="userId"
+              @message-sent="handleMessageSent"
+            />
+          </div>
         </div>
       </div>
   </div>

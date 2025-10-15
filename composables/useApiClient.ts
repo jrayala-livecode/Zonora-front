@@ -82,13 +82,20 @@ export const useApiClient = () => {
 
     const fullUrl = url.startsWith('http') ? url : `${apiBaseUrl}${url}`;
     
+    // Prepare headers - don't set Content-Type for FormData
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${userStore.token}`,
+      ...(options.headers as Record<string, string>),
+    };
+
+    // Only set Content-Type to JSON if body is not FormData
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(fullUrl, {
       ...options,
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
 
     // Check for 401 Unauthorized response
@@ -130,11 +137,46 @@ export const useApiClient = () => {
     }
   };
 
+  // HTTP method helpers
+  const get = async <T = any>(url: string): Promise<T> => {
+    return apiRequestJson(url, { method: 'GET' });
+  };
+
+  const post = async <T = any>(url: string, data?: any): Promise<T> => {
+    return apiRequestJson(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  };
+
+  const put = async <T = any>(url: string, data?: any): Promise<T> => {
+    return apiRequestJson(url, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  };
+
+  const patch = async <T = any>(url: string, data?: any): Promise<T> => {
+    return apiRequestJson(url, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  };
+
+  const del = async <T = any>(url: string): Promise<T> => {
+    return apiRequestJson(url, { method: 'DELETE' });
+  };
+
   return {
     setTokenExpiration,
     checkTokenExpiration,
     apiRequest,
     apiRequestJson,
+    get,
+    post,
+    put,
+    patch,
+    delete: del,
     cleanup,
   };
 };

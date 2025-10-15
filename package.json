@@ -19,14 +19,18 @@
     "@vueuse/nuxt": "^13.5.0",
     "animate.css": "^4.1.1",
     "chart.js": "^4.5.0",
+    "isomorphic-dompurify": "^2.28.0",
+    "laravel-echo": "^2.2.4",
     "leaflet": "^1.9.4",
     "leaflet.awesome-markers": "^2.0.5",
     "lucide-vue-next": "^0.525.0",
     "nuxt": "^3.13.0",
     "pinia": "^3.0.3",
     "pusher-js": "^8.4.0",
+    "vue-advanced-chat": "^2.1.0",
     "vue-hcaptcha": "^0.1.1",
-    "vue-leaflet": "^0.1.0"
+    "vue-leaflet": "^0.1.0",
+    "vue-qrcode-reader": "^5.7.3"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.20"

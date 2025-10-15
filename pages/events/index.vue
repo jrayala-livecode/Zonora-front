@@ -7,45 +7,103 @@
 
         <!-- Search and Filters -->
         <div class="bg-gray-800 rounded-lg p-6 mb-6">
-          <div class="flex flex-col lg:flex-row gap-4 items-center">
-            <div class="flex flex-col lg:flex-row gap-4 items-center">
-              <div class="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Buscar eventos..."
-                  class="input-field w-full pl-10"
-                  v-model="searchQuery"
-                  @input="handleSearch"
-                />
-                <Search
-                  class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
-                />
-              </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <!-- Search Input -->
+            <div class="lg:col-span-4 relative">
+              <input
+                type="text"
+                placeholder="Buscar eventos..."
+                class="input-field w-full pl-10"
+                v-model="searchQuery"
+                @input="handleSearch"
+              />
+              <Search
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
+              />
+            </div>
 
-              <div class="w-full lg:w-48">
-                <input
-                  type="date"
-                  class="input-field w-full"
-                  v-model="dateFilter"
-                />
-              </div>
+            <!-- Venue Filter -->
+            <div class="lg:col-span-3">
+              <select
+                v-model="venueFilter"
+                @change="handleFilterChange"
+                class="input-field w-full"
+              >
+                <option value="">Todos los venues</option>
+                <option value="no_venue">Sin venue</option>
+                <option
+                  v-for="venue in venues"
+                  :key="venue.id"
+                  :value="venue.id"
+                >
+                  {{ venue.name }}
+                </option>
+              </select>
+            </div>
 
-              <div class="flex items-center space-x-6">
-                <!-- ...existing radio buttons... -->
-              </div>
+            <!-- Hashtag Filter -->
+            <div class="lg:col-span-3 relative">
+              <input
+                type="text"
+                placeholder="Filtrar por hashtag..."
+                class="input-field w-full pl-8"
+                v-model="hashtagFilter"
+                @input="handleSearch"
+              />
+              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">#</span>
+            </div>
+
+            <!-- Today Switch -->
+            <div class="lg:col-span-2 flex items-center justify-center bg-gray-700 rounded-lg px-4 py-2 border border-gray-600">
+              <label class="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="todayFilter"
+                  @change="handleFilterChange"
+                  class="sr-only peer"
+                />
+                <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                <span class="ml-3 text-sm font-medium text-gray-300">Solo hoy</span>
+              </label>
             </div>
           </div>
-          <div
-            v-if="useCurrentLocation && locationError"
-            class="mt-2 text-red-400"
-          >
-            {{ locationError }}
+
+          <!-- Second Row: Date Picker (hidden when Today filter is active) -->
+          <div v-if="!todayFilter" class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+            <!-- Date Picker -->
+            <div class="lg:col-span-3 relative">
+              <input
+                type="date"
+                v-model="dateFilter"
+                @change="handleFilterChange"
+                class="input-field w-full"
+                placeholder="Filtrar por fecha..."
+              />
+            </div>
+
+            <!-- Clear Date Button -->
+            <div class="lg:col-span-2">
+              <button
+                v-if="dateFilter"
+                @click="clearDateFilter"
+                class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm border border-gray-600"
+              >
+                Limpiar fecha
+              </button>
+            </div>
+
+            <!-- Spacer -->
+            <div class="lg:col-span-7"></div>
           </div>
-          <div
-            v-if="useCurrentLocation && !locationError"
-            class="text-sm text-gray-400 mt-2"
-          >
-            Mostrando eventos cercanos a tu ubicación (±200km)
+
+          <!-- Clear All Filters Button -->
+          <div v-if="hasActiveFilters" class="mt-4 flex justify-end">
+            <button
+              @click="clearFilters"
+              class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
+            >
+              Limpiar todos los filtros
+            </button>
           </div>
         </div>
 
@@ -191,7 +249,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
-import { Search } from "lucide-vue-next";
+import { Search, X } from "lucide-vue-next";
 import MapView from "~/components/MapView.vue";
 import { useEvents } from "~/composables/useEvents";
 
@@ -206,7 +264,13 @@ const apiBaseUrl = config.public.apiBaseUrl;
 
 const currentPage = ref(1);
 const limit = ref(10);
+
+// Filter states
+const venueFilter = ref('');
+const hashtagFilter = ref('');
+const todayFilter = ref(false);
 const dateFilter = ref('');
+const venues = ref<Array<{ id: number; name: string }>>([]);
 
 // Computed properties for pagination
 const totalPages = computed(() => {
@@ -238,12 +302,50 @@ const currentEvents = computed(() => {
   return paginatedEvents.value.data;
 });
 
+// Build filter object
+const buildFilters = () => {
+  const filters: any = {};
+  
+  if (searchQuery.value) filters.search = searchQuery.value;
+  if (venueFilter.value === 'no_venue') filters.no_venue = true;
+  else if (venueFilter.value) filters.venue_id = venueFilter.value;
+  if (todayFilter.value) filters.today = true;
+  if (dateFilter.value) filters.date = dateFilter.value;
+  if (hashtagFilter.value) filters.hashtag = hashtagFilter.value.replace(/^#/, '');
+  
+  return filters;
+};
+
+// Check if any filters are active
+const hasActiveFilters = computed(() => {
+  return searchQuery.value || venueFilter.value || hashtagFilter.value || todayFilter.value || dateFilter.value;
+});
+
+// Clear date filter only
+const clearDateFilter = async () => {
+  dateFilter.value = '';
+  todayFilter.value = false; // Also clear today filter since they conflict
+  currentPage.value = 1;
+  await fetchEventsFromApiPaginated(1, limit.value, buildFilters());
+};
+
+// Clear all filters
+const clearFilters = async () => {
+  searchQuery.value = '';
+  venueFilter.value = '';
+  hashtagFilter.value = '';
+  todayFilter.value = false;
+  dateFilter.value = '';
+  currentPage.value = 1;
+  await fetchEventsFromApiPaginated(1, limit.value);
+};
+
 // Pagination handlers
 const goToPage = async (page: number) => {
   if (page < 1 || page > totalPages.value || page === currentPage.value) return;
   
   currentPage.value = page;
-  await fetchEventsFromApiPaginated(page, limit.value);
+  await fetchEventsFromApiPaginated(page, limit.value, buildFilters());
   
   // Scroll to top of events list
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -251,7 +353,12 @@ const goToPage = async (page: number) => {
 
 const handleSearch = async () => {
   currentPage.value = 1;
-  await fetchEventsFromApiPaginated(1, limit.value);
+  await fetchEventsFromApiPaginated(1, limit.value, buildFilters());
+};
+
+const handleFilterChange = async () => {
+  currentPage.value = 1;
+  await fetchEventsFromApiPaginated(1, limit.value, buildFilters());
 };
 
 const handleUseCurrentLocation = async (useLocation: boolean) => {
@@ -263,36 +370,51 @@ const handleUseCurrentLocation = async (useLocation: boolean) => {
     // Implement nearby events logic here
     loadingNearby.value = false;
   } else {
-    await fetchEventsFromApiPaginated(1, limit.value);
+    await fetchEventsFromApiPaginated(1, limit.value, buildFilters());
   }
 };
 
 const isMounted = ref(false);
 
+// Fetch venues for the dropdown
+const fetchVenues = async () => {
+  try {
+    const res = await fetch(`${apiBaseUrl}/venues?per_page=100`);
+    if (!res.ok) throw new Error('Error fetching venues');
+    
+    const json = await res.json();
+    venues.value = json.data.map((v: any) => ({ id: v.id, name: v.name }));
+  } catch (error) {
+    console.error('Error fetching venues:', error);
+    venues.value = [];
+  }
+};
+
 onMounted(() => {
   isMounted.value = true;
+  fetchVenues();
   fetchEventsFromApiPaginated(1, limit.value).catch((error) => {
     console.error("Error fetching events:", error);
   });
 });
 
-// Remove incorrect computed usage; if you need a filteredEvents computed property, define it like this:
+// Filtered events are handled by the API, so we just use currentEvents
 const filteredEvents = computed(() => {
-  if(!searchQuery.value || searchQuery.value.trim() === '') {
-    return currentEvents.value;
-  }
-
-  if (!paginatedEvents.value || !paginatedEvents.value.data) return [];
-
-  return paginatedEvents.value.data.filter(event => event.title.toLowerCase().includes(
-    searchQuery.value.toLowerCase()) || event.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  return currentEvents.value;
 });
 
-// Watch for date filter changes
-watch(dateFilter, async () => {
-  currentPage.value = 1;
-  await fetchEventsFromApiPaginated(1, limit.value);
+// Watch for today filter - if enabled, clear date filter
+watch(todayFilter, (newValue) => {
+  if (newValue && dateFilter.value) {
+    dateFilter.value = '';
+  }
+});
+
+// Watch for date filter - if set, clear today filter
+watch(dateFilter, (newValue) => {
+  if (newValue && todayFilter.value) {
+    todayFilter.value = false;
+  }
 });
 </script>
 

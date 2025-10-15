@@ -35,11 +35,21 @@
         </div>
         
         <div class="flex-shrink-0">
-          <img 
-            :src="artist.profile_picture_url || '/default-avatar.png'" 
+          <img
+            v-if="artist.profile_picture_url && !imageLoadFailed[artist.id]"
+            :src="artist.profile_picture_url"
             :alt="artist.stage_name"
             class="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+            @error="() => onArtistImageError(artist.id)"
           />
+          <div
+            v-else
+            class="w-12 h-12 rounded-full border-2 border-gray-600 bg-gray-700 text-gray-300 flex items-center justify-center text-center text-[10px] uppercase tracking-wide"
+            aria-label="Sin imagen"
+            role="img"
+          >
+            Sin Imagen
+          </div>
         </div>
         
         <div class="flex-1 min-w-0">
@@ -69,6 +79,11 @@ import type { Artist } from '~/composables/types/types';
 const popularArtists = ref<Artist[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const imageLoadFailed = ref<Record<number, boolean>>({});
+
+const onArtistImageError = (artistId: number) => {
+  imageLoadFailed.value[artistId] = true;
+};
 
 const fetchPopularArtists = async () => {
   loading.value = true;

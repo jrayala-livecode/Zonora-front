@@ -54,10 +54,10 @@
           <!-- Row 1: Main Card -->
           <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             <!-- Hero Image -->
-            <div class="relative h-48 md:h-56 bg-gradient-to-br from-orange-500 to-red-600">
+            <div class="relative aspect-square w-3/4 mx-auto bg-gradient-to-br from-orange-500 to-red-600">
               <img
                 v-if="artist.profile_picture_url"
-                :src="getImageUrl(artist.profile_picture_url)"
+                :src="artist.profile_picture_url"
                 :alt="artist.stage_name"
                 class="w-full h-full object-cover object-center"
                 @error="handleImageError"
@@ -89,12 +89,19 @@
               <div v-if="!isOwner" class="absolute bottom-3 right-3">
                 <button
                   @click="startConversation"
-                  class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors duration-200 shadow-lg"
+                  :disabled="messageLoading"
+                  :class="[
+                    'inline-flex items-center px-3 py-1.5 rounded text-sm font-medium transition-colors duration-200 shadow-lg',
+                    messageLoading ? 'bg-purple-700/70 text-white cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  ]"
                 >
-                  <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="messageLoading" class="w-3 h-3 mr-1.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v2m0 12v2m8-8h-2M6 12H4m12.364 6.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 0l-1.414 1.414M7.05 16.95l-1.414 1.414" />
+                  </svg>
+                  <svg v-else class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                   </svg>
-                  Enviar Mensaje
+                  {{ messageLoading ? 'Abriendo…' : 'Enviar Mensaje' }}
                 </button>
               </div>
             </div>
@@ -192,6 +199,25 @@
             </div>
           </div>
 
+          <!-- Proficiencies Card -->
+          <div v-if="artist.proficiencies && artist.proficiencies.length > 0" class="bg-gray-800 rounded-lg shadow-lg p-3">
+            <h3 class="text-xs font-semibold text-white mb-2 flex items-center">
+              <div class="w-4 h-4 bg-orange-500 rounded flex items-center justify-center mr-1.5">
+                <span class="text-white font-bold text-xs">🎸</span>
+              </div>
+              Instrumentos & Habilidades
+            </h3>
+            <div class="flex flex-wrap gap-1.5">
+              <span 
+                v-for="proficiency in artist.proficiencies" 
+                :key="proficiency.id"
+                class="inline-flex items-center px-2 py-1 bg-purple-900/30 text-purple-300 text-xs font-medium rounded-md border border-purple-700/40 transition-colors hover:bg-purple-900/50"
+              >
+                {{ proficiency.proficiency }}
+              </span>
+            </div>
+          </div>
+
 
           <!-- Metrics Section (for artist owners) -->
           <div v-if="isOwner && metrics" class="space-y-4">
@@ -238,6 +264,24 @@
                 Ver {{ artist.image_ids.length - 8 }} más
               </button>
             </div>
+          </div>
+
+          <!-- Posts Section -->
+          <div class="bg-gray-800 rounded-lg shadow-lg p-4">
+            <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+              <div class="w-5 h-5 bg-orange-500 rounded flex items-center justify-center mr-2">
+                <span class="text-white font-bold text-xs">💬</span>
+              </div>
+              Comentarios
+            </h3>
+            <PostForm v-if="user" :postable-type="'artist'" :postable-id="artist.id" class="mb-4" />
+            <div v-else class="mb-4 text-center py-4 bg-gray-700 rounded-lg border border-gray-600">
+              <p class="text-gray-400 text-sm mb-2">Inicia sesión para dejar un comentario</p>
+              <NuxtLink to="/login" class="text-orange-500 hover:text-orange-400 text-sm font-medium">
+                Iniciar Sesión
+              </NuxtLink>
+            </div>
+            <PostList :postable-type="'artist'" :postable-id="artist.id" />
           </div>
         </div>
       </div>
@@ -292,6 +336,7 @@ const showSocialLinks = ref(false);
 const selectedImage = ref('');
 const showFollowersModal = ref(false);
 const shareButtonText = ref('Compartir');
+const messageLoading = ref(false);
 
 // Computed
 const isOwner = computed(() => {
@@ -323,14 +368,8 @@ const handleImageError = (event: Event) => {
   img.style.display = 'none';
 };
 
-const getImageUrl = (imageId: string) => {
-  // Convert to proxy URL to avoid rate limiting
-  const { convertToProxyUrl } = useImageProxy();
-  return convertToProxyUrl(`https://gateway.pinata.cloud/ipfs/${imageId}`);
-};
-
 const openImageModal = (imageId: string) => {
-  selectedImage.value = getImageUrl(imageId);
+  selectedImage.value = imageId;
 };
 
 const closeImageModal = () => {
@@ -351,11 +390,17 @@ const handleFollowChanged = async (isFollowing: boolean) => {
   }
 };
 
-const startConversation = () => {
+const startConversation = async () => {
   if (!artist.value || !artist.value.user) return;
-  
-  // Navigate to chat with the artist's user ID
-  navigateTo(`/chat/${artist.value.user.id}`);
+
+  try {
+    messageLoading.value = true;
+    // Navigate to chat with the artist's user ID
+    await navigateTo(`/chat/${artist.value.user.id}`);
+  } finally {
+    // In case navigation is blocked/cancelled, avoid a stuck state
+    setTimeout(() => { messageLoading.value = false; }, 1500);
+  }
 };
 
 const shareArtist = async () => {

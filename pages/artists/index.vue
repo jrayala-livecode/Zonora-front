@@ -48,6 +48,20 @@
               </select>
             </div>
 
+            <!-- Proficiency Filter (only show if proficiencies exist) -->
+            <div v-if="proficiencies.length > 0" class="md:w-48">
+              <select
+                v-model="selectedProficiencyId"
+                @change="applyFilters"
+                class="block w-full px-2.5 py-2 text-sm border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Todos los instrumentos</option>
+                <option v-for="proficiency in proficiencies" :key="proficiency.id" :value="proficiency.id">
+                  {{ proficiency.proficiency }}
+                </option>
+              </select>
+            </div>
+
             <!-- Sort Options -->
             <div class="md:w-40">
               <select
@@ -184,6 +198,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { debounce } from 'lodash-es';
 
 const { getArtists, searchArtists } = useArtists();
+const { fetchProficiencies, searchArtistsByProficiency, proficiencies } = useProficiencies();
 
 // State
 const artists = ref([]);
@@ -191,6 +206,7 @@ const loading = ref(false);
 const error = ref('');
 const searchQuery = ref('');
 const selectedGenre = ref('');
+const selectedProficiencyId = ref('');
 const sortBy = ref('name');
 const currentPage = ref(1);
 const itemsPerPage = ref(12);
@@ -201,7 +217,7 @@ const totalArtists = ref(0);
 const availableGenres = computed(() => {
   const genres = new Set();
   artists.value.forEach(artist => {
-    if (artist.genres) {
+    if (artist.genres && Array.isArray(artist.genres)) {
       artist.genres.forEach(genre => genres.add(genre));
     }
   });
@@ -230,23 +246,35 @@ const loadArtists = async () => {
   error.value = '';
   
   try {
-    const params = {
-      page: currentPage.value,
-      per_page: itemsPerPage.value,
-      sort_by: sortBy.value,
-      genre: selectedGenre.value || undefined
-    };
-
-    let result;
-    if (searchQuery.value.trim()) {
-      result = await searchArtists(searchQuery.value.trim(), params);
+    // If proficiency filter is selected, use proficiency search
+    if (selectedProficiencyId.value) {
+      const result = await searchArtistsByProficiency(
+        parseInt(selectedProficiencyId.value), 
+        currentPage.value, 
+        itemsPerPage.value
+      );
+      artists.value = result.data;
+      pagination.value = result.pagination;
+      totalArtists.value = result.pagination?.total || 0;
     } else {
-      result = await getArtists(params);
-    }
+      const params = {
+        page: currentPage.value,
+        per_page: itemsPerPage.value,
+        sort_by: sortBy.value,
+        genre: selectedGenre.value || undefined
+      };
 
-    artists.value = result.data;
-    pagination.value = result.pagination;
-    totalArtists.value = result.pagination?.total || 0;
+      let result;
+      if (searchQuery.value.trim()) {
+        result = await searchArtists(searchQuery.value.trim(), params);
+      } else {
+        result = await getArtists(params);
+      }
+
+      artists.value = result.data;
+      pagination.value = result.pagination;
+      totalArtists.value = result.pagination?.total || 0;
+    }
   } catch (err) {
     error.value = err.message || 'Error al cargar artistas';
     console.error('Error loading artists:', err);
@@ -267,13 +295,14 @@ const applyFilters = () => {
 const clearFilters = () => {
   searchQuery.value = '';
   selectedGenre.value = '';
+  selectedProficiencyId.value = '';
   sortBy.value = 'name';
   currentPage.value = 1;
   loadArtists();
 };
 
 // Watch for filter changes
-watch([selectedGenre, sortBy], () => {
+watch([selectedGenre, selectedProficiencyId, sortBy], () => {
   applyFilters();
 });
 
@@ -283,7 +312,14 @@ watch(currentPage, () => {
 });
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
+  // Load proficiencies for filter dropdown (silently fails if none exist)
+  try {
+    await fetchProficiencies();
+  } catch (err) {
+    // Silently fail - proficiencies are optional
+  }
+  // Load artists
   loadArtists();
 });
 

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Posts API - Frontend</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Posts API Test - Frontend</h1>
+
+        <!-- Login Section -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">1. Login</h2>
+            <div class="space-y-3">
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="Email" 
+                    value="admin@dev.local"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Password" 
+                    value="admin123"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+                <button 
+                    onclick="login()" 
+                    class="px-6 py-2 bg-orange-600 hover:bg-orange-700 rounded font-medium"
+                >
+                    Login
+                </button>
+                <div id="login-result" class="text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Create Post Section -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">2. Create Post</h2>
+            <div class="space-y-3">
+                <select 
+                    id="postable-type" 
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                >
+                    <option value="venue">Venue</option>
+                    <option value="artist">Artist</option>
+                    <option value="event">Event</option>
+                </select>
+                <input 
+                    type="number" 
+                    id="postable-id" 
+                    placeholder="Resource ID" 
+                    value="1"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+                <textarea 
+                    id="post-content" 
+                    placeholder="Post content (supports emojis 🎉)" 
+                    rows="3"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                >¡Este es un comentario de prueba! 🎵</textarea>
+                
+                <!-- hCaptcha widget (hidden by default) -->
+                <div id="hcaptcha-container" style="display: none;"></div>
+                
+                <button 
+                    onclick="createPost()" 
+                    class="px-6 py-2 bg-green-600 hover:bg-green-700 rounded font-medium"
+                >
+                    Create Post
+                </button>
+                <div id="create-post-result" class="text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Fetch Posts Section -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">3. Fetch Posts</h2>
+            <div class="space-y-3">
+                <select 
+                    id="fetch-type" 
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                >
+                    <option value="venue">Venue</option>
+                    <option value="artist">Artist</option>
+                    <option value="event">Event</option>
+                </select>
+                <input 
+                    type="number" 
+                    id="fetch-id" 
+                    placeholder="Resource ID" 
+                    value="1"
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+                <button 
+                    onclick="fetchPosts()" 
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium"
+                >
+                    Fetch Posts
+                </button>
+                <div id="fetch-posts-result" class="text-sm"></div>
+                <div id="posts-list" class="space-y-3 mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Rate Limiting Test -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">4. Test Rate Limiting</h2>
+            <p class="text-gray-400 text-sm mb-3">Create 6 posts rapidly to test rate limiting and captcha requirement</p>
+            <button 
+                onclick="testRateLimiting()" 
+                class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 rounded font-medium"
+            >
+                Test Rate Limiting
+            </button>
+            <div id="rate-limit-result" class="text-sm mt-3"></div>
+        </div>
+
+        <!-- Delete Post Section -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">5. Delete Post</h2>
+            <div class="space-y-3">
+                <input 
+                    type="number" 
+                    id="delete-post-id" 
+                    placeholder="Post ID to delete" 
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                />
+                <button 
+                    onclick="deletePost()" 
+                    class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded font-medium"
+                >
+                    Delete Post
+                </button>
+                <div id="delete-post-result" class="text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        let authToken = null;
+        let hcaptchaToken = null;
+        let hcaptchaWidgetId = null;
+
+        // Initialize hCaptcha
+        function initHCaptcha() {
+            if (window.hcaptcha && !hcaptchaWidgetId) {
+                hcaptchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
+                    sitekey: 'a19acdc8-2292-45d2-bc3e-c5644102f500',
+                    callback: (token) => {
+                        hcaptchaToken = token;
+                        console.log('hCaptcha token received');
+                    },
+                    'expired-callback': () => {
+                        hcaptchaToken = null;
+                        console.log('hCaptcha token expired');
+                    }
+                });
+            }
+        }
+
+        function showHCaptcha() {
+            document.getElementById('hcaptcha-container').style.display = 'block';
+            initHCaptcha();
+        }
+
+        function hideHCaptcha() {
+            document.getElementById('hcaptcha-container').style.display = 'none';
+            if (window.hcaptcha && hcaptchaWidgetId !== null) {
+                window.hcaptcha.reset(hcaptchaWidgetId);
+            }
+            hcaptchaToken = null;
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        'h-captcha-response': 'dev-bypass-token'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = `<div class="text-green-400">✅ Login successful! Token: ${authToken.substring(0, 20)}...</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="text-red-400">❌ Login failed: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-400">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createPost() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const type = document.getElementById('postable-type').value;
+            const id = document.getElementById('postable-id').value;
+            const content = document.getElementById('post-content').value;
+            const resultDiv = document.getElementById('create-post-result');
+
+            const payload = {
+                postable_type: type,
+                postable_id: parseInt(id),
+                content: content
+            };
+
+            // Include captcha token if available
+            if (hcaptchaToken) {
+                payload['h-captcha-response'] = hcaptchaToken;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="text-green-400">✅ Post created! ID: ${data.post.id}</div>`;
+                    hideHCaptcha();
+                    
+                    // Auto-fetch posts to show the new post
+                    document.getElementById('fetch-type').value = type;
+                    document.getElementById('fetch-id').value = id;
+                    fetchPosts();
+                } else {
+                    if (data.requires_captcha) {
+                        resultDiv.innerHTML = `<div class="text-yellow-400">⚠️ Captcha required. Please complete the captcha below.</div>`;
+                        showHCaptcha();
+                    } else {
+                        resultDiv.innerHTML = `<div class="text-red-400">❌ Failed: ${data.message || JSON.stringify(data)}</div>`;
+                    }
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-400">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchPosts() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const type = document.getElementById('fetch-type').value;
+            const id = document.getElementById('fetch-id').value;
+            const resultDiv = document.getElementById('fetch-posts-result');
+            const listDiv = document.getElementById('posts-list');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts/${type}/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const posts = data.data || [];
+                    resultDiv.innerHTML = `<div class="text-green-400">✅ Fetched ${posts.length} posts</div>`;
+                    
+                    if (posts.length > 0) {
+                        listDiv.innerHTML = posts.map(post => `
+                            <div class="bg-gray-700 rounded p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <strong class="text-orange-400">${post.author.name}</strong>
+                                        <span class="text-gray-400 text-xs ml-2">${new Date(post.created_at).toLocaleString()}</span>
+                                    </div>
+                                    <button 
+                                        onclick="document.getElementById('delete-post-id').value = ${post.id}" 
+                                        class="text-red-400 text-xs hover:text-red-300"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                                <p class="text-white">${post.content}</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        listDiv.innerHTML = '<div class="text-gray-400 text-center py-4">No posts found</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="text-red-400">❌ Failed to fetch posts: ${data.message || 'Unknown error'}</div>`;
+                    listDiv.innerHTML = '';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-400">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function deletePost() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const postId = document.getElementById('delete-post-id').value;
+            const resultDiv = document.getElementById('delete-post-result');
+
+            if (!postId) {
+                resultDiv.innerHTML = '<div class="text-yellow-400">⚠️ Please enter a post ID</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="text-green-400">✅ Post deleted successfully!</div>`;
+                    
+                    // Refresh the posts list
+                    fetchPosts();
+                } else {
+                    resultDiv.innerHTML = `<div class="text-red-400">❌ Failed to delete post: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-400">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRateLimiting() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('rate-limit-result');
+            resultDiv.innerHTML = '<div class="text-blue-400">Testing rate limiting...</div>';
+
+            const type = document.getElementById('postable-type').value;
+            const id = document.getElementById('postable-id').value;
+
+            let results = [];
+
+            for (let i = 1; i <= 6; i++) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/posts`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            postable_type: type,
+                            postable_id: parseInt(id),
+                            content: `Rate limit test post #${i}`
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        results.push(`Post ${i}: ✅ Created`);
+                    } else if (data.requires_captcha) {
+                        results.push(`Post ${i}: ⚠️ Captcha required (rate limit triggered!)`);
+                    } else {
+                        results.push(`Post ${i}: ❌ Failed - ${data.message}`);
+                    }
+                } catch (error) {
+                    results.push(`Post ${i}: ❌ Error - ${error.message}`);
+                }
+
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            resultDiv.innerHTML = `<div class="space-y-1">${results.map(r => `<div>${r}</div>`).join('')}</div>`;
+        }
+    </script>
+</body>
+</html>
+

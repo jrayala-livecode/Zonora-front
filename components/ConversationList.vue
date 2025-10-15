@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 overflow-y-auto">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-6">
       <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>

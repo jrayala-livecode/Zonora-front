@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 overflow-y-auto p-3 space-y-3">
+  <div class="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 max-h-full">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-6">
       <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
@@ -39,7 +39,10 @@
           </div>
           
           <!-- Message Content -->
-          <p class="text-sm whitespace-pre-wrap">{{ message.message }}</p>
+          <div 
+            class="text-sm whitespace-pre-wrap message-html-content"
+            v-html="sanitizeMessage(message.message)"
+          ></div>
           
           <!-- Message Metadata -->
           <div
@@ -67,6 +70,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Message } from '~/composables/types/types'
+import DOMPurify from 'isomorphic-dompurify'
 
 interface Props {
   messages: Message[]
@@ -80,6 +84,22 @@ const props = withDefaults(defineProps<Props>(), {
   error: null,
   currentUserId: 0
 })
+
+/**
+ * Sanitize all messages - allow safe HTML tags but block dangerous ones
+ */
+const sanitizeMessage = (html: string): string => {
+  if (!html) return ''
+  
+  // Configure DOMPurify to allow safe HTML tags but block dangerous ones
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['a', 'br', 'strong', 'em', 'p', 'div', 'span', 'b', 'i', 'u'],
+    ALLOWED_ATTR: ['href', 'style', 'class', 'title'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|#):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+    FORBID_ATTR: ['onload', 'onerror', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'target']
+  })
+}
 
 // Format message time for display
 const formatMessageTime = (timestamp: string): string => {

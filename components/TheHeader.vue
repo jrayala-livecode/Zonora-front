@@ -58,10 +58,18 @@
               </button>
 
               <!-- User Dropdown -->
-              <div
-                v-if="showUserMenu"
-                class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg py-1.5 z-50"
+              <Transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-150"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95"
               >
+                <div
+                  v-if="showUserMenu"
+                  class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg py-1.5 z-50"
+                >
                 <!-- User Info -->
                 <div class="px-3 py-1.5 border-b border-gray-700">
                   <div class="text-xs font-medium text-white">{{ displayName }}</div>
@@ -76,6 +84,15 @@
                   </div>
                 </div>
                 
+                <!-- Admin Link -->
+                <NuxtLink 
+                  v-if="user?.is_admin" 
+                  to="/admin/events" 
+                  class="block px-3 py-1.5 text-xs text-orange-400 hover:bg-gray-700 font-medium border-b border-gray-700"
+                >
+                  Panel de Administración
+                </NuxtLink>
+                
                 <!-- Menu Items -->
                 <NuxtLink to="/profile" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Perfil
@@ -83,11 +100,17 @@
                 <NuxtLink to="/my-events" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Mis Eventos
                 </NuxtLink>
+                <NuxtLink to="/tickets" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
+                  Mis Tickets
+                </NuxtLink>
                 <NuxtLink to="/artists/my-stats" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Mis Estadísticas
                 </NuxtLink>
                 <NuxtLink to="/invitations" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Mis Invitaciones
+                </NuxtLink>
+                <NuxtLink to="/event-proposals" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
+                  Propuestas de Eventos
                 </NuxtLink>
                 <!--            <NuxtLink to="/settings" class="block px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700">
                   Configuración
@@ -101,7 +124,8 @@
                 >
                   Cerrar Sesión
                 </button>
-              </div>
+                </div>
+              </Transition>
             </div>
 
             <!-- Login Button -->
@@ -157,6 +181,22 @@
           @click="showMobileMenu = false"
         >
           Chat
+        </NuxtLink>
+        <NuxtLink 
+          v-if="isAuthenticated"
+          to="/tickets" 
+          class="block px-2 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
+          @click="showMobileMenu = false"
+        >
+          Mis Tickets
+        </NuxtLink>
+        <NuxtLink 
+          v-if="isAuthenticated"
+          to="/my-events" 
+          class="block px-2 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
+          @click="showMobileMenu = false"
+        >
+          Mis Eventos
         </NuxtLink>
         <NuxtLink 
           to="/venues/events" 

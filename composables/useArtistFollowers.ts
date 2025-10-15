@@ -20,3 +20,4 @@ export const useArtistFollowers = () => {
 
   return { getFollowers };
 };
+

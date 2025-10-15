@@ -33,6 +33,13 @@
               </div>
               <div class="flex items-center space-x-2">
                 <button
+                  v-if="isEventToday(event.date)"
+                  @click="goToTicketValidation(event.id)"
+                  class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Validar Tickets
+                </button>
+                <button
                   @click="startEditing(event)"
                   class="btn-secondary"
                 >
@@ -600,6 +607,21 @@ const formatDate = (dateStr: string) => {
     month: 'long',
     day: 'numeric',
   });
+};
+
+const isEventToday = (dateStr: string) => {
+  const eventDate = new Date(dateStr);
+  const today = new Date();
+  
+  // Reset time to compare only dates
+  eventDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  return eventDate.getTime() === today.getTime();
+};
+
+const goToTicketValidation = (eventId: number) => {
+  navigateTo(`/events/${eventId}/tickets/ticket-validation`);
 };
 
 onMounted(fetchUserEvents);

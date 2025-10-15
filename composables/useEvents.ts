@@ -50,6 +50,15 @@ export interface Event {
     price: number;
     active: boolean;
   };
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  approved_by?: number;
+  approved_at?: string;
+  rejection_reason?: string;
+  approver?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 export interface PaginatedEvents {
@@ -59,6 +68,7 @@ export interface PaginatedEvents {
   path: string;
   per_page: number;
   total: number;
+  from: number;
   to: number;
   data: Event[];
 }
@@ -130,7 +140,12 @@ function mapApiEventToEvent(apiEvent: any): Event {
     prices: apiEvent.prices || [],
     price_range: apiEvent.price_range || '',
     formatted_prices: apiEvent.formatted_prices || [],
-    active_price: apiEvent.active_price || null
+    active_price: apiEvent.active_price || null,
+    approval_status: apiEvent.approval_status || 'pending',
+    approved_by: apiEvent.approved_by || null,
+    approved_at: apiEvent.approved_at || null,
+    rejection_reason: apiEvent.rejection_reason || null,
+    approver: apiEvent.approver || null
   };
 }
 
@@ -235,17 +250,40 @@ export const useEvents = () => {
     isLoading.value = false;
   };
 
-  const fetchEventsFromApiPaginated = async (page: number, limit: number) => {
+  const fetchEventsFromApiPaginated = async (
+    page: number, 
+    limit: number, 
+    filters?: {
+      search?: string;
+      venue_id?: string | number;
+      no_venue?: boolean;
+      today?: boolean;
+      date?: string;
+      hashtag?: string;
+    }
+  ) => {
     isLoading.value = true;
 
     try {
-      const res = await fetch(`${config.public.apiBaseUrl}/events?page=${page}&limit=${limit}`);
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      });
+
+      if (filters?.search) params.append('search', filters.search);
+      if (filters?.venue_id) params.append('venue_id', filters.venue_id.toString());
+      if (filters?.no_venue) params.append('no_venue', 'true');
+      if (filters?.today) params.append('today', 'true');
+      if (filters?.date) params.append('date', filters.date);
+      if (filters?.hashtag) params.append('hashtag', filters.hashtag);
+
+      const res = await fetch(`${config.public.apiBaseUrl}/events?${params.toString()}`);
       if (!res.ok) throw new Error('Error fetching paginated events');
 
       const json = await res.json();
 
       json.data.data = json.data.data.map(mapApiEventToEvent);
-
 
       paginatedEvents.value = json.data;
       

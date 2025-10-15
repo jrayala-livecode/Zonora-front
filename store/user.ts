@@ -10,6 +10,7 @@ export const useUserStore = defineStore('user', {
       avatar?: string;
       description?: string;
       joinedAt?: string;
+      is_admin?: boolean;
     },
     token: null as string | null,
     initialized: false,

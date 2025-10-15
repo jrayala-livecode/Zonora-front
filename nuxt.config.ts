@@ -53,8 +53,12 @@ export default defineNuxtConfig({
     public: {
       appName: 'Zonora',    
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8000/api',
       pusherKey: process.env.NUXT_PUBLIC_PUSHER_KEY,
-      pusherCluster: process.env.NUXT_PUBLIC_PUSHER_CLUSTER
+      pusherCluster: process.env.NUXT_PUBLIC_PUSHER_CLUSTER,
+      reverbAppKey: process.env.NUXT_PUBLIC_REVERB_APP_KEY || 'undergroundvenues',
+      reverbHost: process.env.NUXT_PUBLIC_REVERB_HOST || 'localhost',
+      reverbPort: process.env.NUXT_PUBLIC_REVERB_PORT || 8080,
     }
   }
 })

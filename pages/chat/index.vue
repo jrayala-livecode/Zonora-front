@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-gray-900 flex" style="height: calc(100vh - 48px);">
+  <div class="bg-gray-900 flex overflow-hidden" style="height: calc(100vh - 64px);">
     <!-- Conversations Sidebar -->
-    <div class="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
+    <div class="w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full">
       <!-- Header with New Chat Button -->
       <div class="p-3 border-b border-gray-700">
         <div class="flex items-center justify-between">
@@ -32,7 +32,7 @@
       </div>
 
       <!-- Chat Area -->
-      <div class="flex-1 flex flex-col">
+      <div class="flex-1 flex flex-col h-full">
         <!-- Chat Header -->
         <div v-if="selectedConversation" class="bg-gray-800 border-b border-gray-700 p-3">
           <div class="flex items-center space-x-2.5">
@@ -50,34 +50,38 @@
         </div>
 
         <!-- Messages Area -->
-        <div class="flex-1 flex flex-col">
-          <MessageList
-            v-if="selectedConversation"
-            :messages="currentMessages"
-            :loading="loading"
-            :error="error"
-            :current-user-id="currentUserId"
-          />
+        <div class="flex-1 flex flex-col min-h-0">
+          <div class="flex-1 min-h-0">
+            <MessageList
+              v-if="selectedConversation"
+              :messages="currentMessages"
+              :loading="loading"
+              :error="error"
+              :current-user-id="currentUserId"
+            />
 
-          <!-- No Conversation Selected -->
-          <div v-else class="flex-1 flex items-center justify-center">
-            <div class="text-center">
-              <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-              </svg>
-              <h3 class="text-lg font-semibold text-white mb-1">Selecciona una conversación</h3>
-              <p class="text-sm text-gray-400">
-                Elige una conversación de la lista para comenzar a chatear
-              </p>
+            <!-- No Conversation Selected -->
+            <div v-else class="flex-1 flex items-center justify-center">
+              <div class="text-center">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-white mb-1">Selecciona una conversación</h3>
+                <p class="text-sm text-gray-400">
+                  Elige una conversación de la lista para comenzar a chatear
+                </p>
+              </div>
             </div>
           </div>
 
           <!-- Message Input -->
-          <MessageInput
-            v-if="selectedConversation"
-            :receiver-id="selectedConversation.user.id"
-            @message-sent="handleMessageSent"
-          />
+          <div class="flex-shrink-0">
+            <MessageInput
+              v-if="selectedConversation"
+              :receiver-id="selectedConversation.user.id"
+              @message-sent="handleMessageSent"
+            />
+          </div>
         </div>
       </div>
 

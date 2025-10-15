@@ -17,10 +17,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if (process.server) return;
 
   const { isAuthenticated, isLoading } = useAuth();
-  const userStore = useUserStore();
 
   // Wait for authentication initialization to complete
-  while (isLoading.value || !userStore.initialized) {
+  while (isLoading.value) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 

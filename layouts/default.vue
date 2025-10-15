@@ -31,9 +31,9 @@
 const { modalState, hideModal, triggerConfirm } = useModal();
 const { isLoading, loadingMessage } = useLoading();
 
-// Check if current route is a chat route
+// Check if current route is a chat or event-proposals route
 const route = useRoute()
 const isChatRoute = computed(() => {
-  return route.path.startsWith('/chat')
+  return route.path.startsWith('/chat') || route.path.startsWith('/event-proposals/')
 })
 </script>
