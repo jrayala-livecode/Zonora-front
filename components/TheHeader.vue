@@ -87,10 +87,10 @@
                 <!-- Admin Link -->
                 <NuxtLink 
                   v-if="user?.is_admin" 
-                  to="/admin/events" 
+                  to="/admin" 
                   class="block px-3 py-1.5 text-xs text-orange-400 hover:bg-gray-700 font-medium border-b border-gray-700"
                 >
-                  Panel de Administración
+                  🔧 Panel de Administración
                 </NuxtLink>
                 
                 <!-- Menu Items -->
@@ -173,6 +173,14 @@
           @click="showMobileMenu = false"
         >
           Artistas
+        </NuxtLink>
+        <NuxtLink 
+          v-if="user?.is_admin"
+          to="/admin" 
+          class="block px-2 py-1.5 text-sm text-orange-400 hover:text-orange-300 hover:bg-gray-700 rounded-md font-medium"
+          @click="showMobileMenu = false"
+        >
+          🔧 Admin Panel
         </NuxtLink>
         <NuxtLink 
           v-if="isAuthenticated"
