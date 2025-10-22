@@ -41,6 +41,9 @@
               </svg>
             </LoadingLink>
 
+            <!-- Notification Bell -->
+            <NotificationBell v-if="isAuthenticated" />
+
             <!-- User Menu -->
             <div v-if="isAuthenticated" class="relative">
               <button
@@ -189,6 +192,14 @@
           @click="showMobileMenu = false"
         >
           Chat
+        </NuxtLink>
+        <NuxtLink 
+          v-if="isAuthenticated"
+          to="/notifications" 
+          class="block px-2 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
+          @click="showMobileMenu = false"
+        >
+          Notificaciones
         </NuxtLink>
         <NuxtLink 
           v-if="isAuthenticated"
