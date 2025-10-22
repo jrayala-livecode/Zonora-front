@@ -75,31 +75,40 @@
           </section>
 
           <!-- Interest Section -->
-          <div class="mt-6 flex flex-col sm:flex-row gap-4">
-            <!-- Interest Button - Always clickable, redirects to login if not authenticated -->
-            <button 
-              @click="handleToggleInterest" 
-              :disabled="loading" 
-              :class="[
-                'flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200',
-                isInterested
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-orange-600 hover:bg-orange-700 text-white'
-              ]"
-            >
-              <Heart :class="[
-                'w-5 h-5 mr-2 transition-transform duration-200',
-                isInterested ? 'fill-current' : ''
-              ]" />
-              <span v-if="loading">Procesando...</span>
-              <span v-else-if="isInterested">Ya no me interesa</span>
-              <span v-else>Me gustaría asistir</span>
-            </button>
-
-            <div class="flex items-center text-gray-400 text-sm">
-              <Users class="w-4 h-4 mr-2" />
-              <span>{{ interestedCount }} persona{{ interestedCount !== 1 ? 's' : '' }} interesada{{ interestedCount !==
-                1 ? 's' : '' }}</span>
+          <div class="mt-6 flex items-center space-x-4">
+            <!-- Instagram-like Interest Toggle & Counter -->
+            <div class="flex items-center space-x-2">
+              <!-- Heart for toggling interest -->
+              <button
+                @click="handleToggleInterest"
+                :disabled="loading"
+                class="p-2 rounded-full hover:bg-gray-700 transition-all duration-200 group"
+                :class="loading ? 'cursor-not-allowed' : 'cursor-pointer'"
+              >
+                <Heart 
+                  :class="[
+                    'w-8 h-8 transition-all duration-200',
+                    isInterested 
+                      ? 'fill-red-500 text-red-500' 
+                      : 'text-gray-400 group-hover:text-red-500 group-hover:scale-110'
+                  ]"
+                />
+              </button>
+              
+              <!-- Number for opening modal -->
+              <button
+                @click="openInterestedModal"
+                :disabled="interestedCount === 0"
+                class="text-white font-semibold text-lg hover:text-orange-400 transition-colors duration-200"
+                :class="interestedCount > 0 ? 'cursor-pointer' : 'cursor-default text-gray-500'"
+              >
+                {{ interestedCount }}
+              </button>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div v-if="loading" class="text-gray-400 text-sm">
+              Procesando...
             </div>
           </div>
 
@@ -178,10 +187,10 @@
             </div>
           </div>
 
-          <!-- Buy Tickets Button -->
+          <!-- Buy Tickets Button - Only for purchasable monetization types -->
           <div class="mt-6">
             <button
-              v-if="!isEventOwner"
+              v-if="!isEventOwner && canPurchaseTickets"
               @click="openPurchaseModal"
               class="w-full px-6 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
             >
@@ -193,25 +202,108 @@
           </div>
         </div>
 
-        <!-- Interested Users Section -->
-        <div v-if="interestedUsers.length > 0" class="card mb-6">
-          <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
-            <Users class="w-6 h-6 mr-3 text-orange-500" />
-            Personas Interesadas ({{ interestedCount }})
-          </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="user in interestedUsers" :key="user.id"
-              class="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
-              <img :src="user.avatar_url" :alt="`Avatar de ${user.name}`" class="w-10 h-10 rounded-full object-cover" />
-              <div class="flex-1 min-w-0">
-                <p class="text-white font-medium truncate">{{ user.name }}</p>
-                <p class="text-gray-400 text-sm">
-                  Interesado{{ user.created_at ? ` el ${formatDate(user.created_at)}` : '' }}
-                </p>
+        <!-- Interested Users Modal (Instagram-style) -->
+        <Teleport to="body">
+          <Transition name="modal">
+            <div 
+              v-if="isInterestedModalOpen" 
+              class="fixed inset-0 z-50 flex items-center justify-center p-4"
+              @click.self="closeInterestedModal"
+            >
+              <!-- Backdrop -->
+              <div class="absolute inset-0 bg-black bg-opacity-75" @click="closeInterestedModal"></div>
+              
+              <!-- Modal Content -->
+              <div class="relative bg-gray-800 rounded-lg w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                  <h3 class="text-lg font-semibold text-white flex items-center">
+                    <Heart class="w-5 h-5 mr-2 fill-red-500 text-red-500" />
+                    Personas Interesadas
+                  </h3>
+                  <button 
+                    @click="closeInterestedModal"
+                    class="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700 rounded-full"
+                  >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- User List -->
+                <div class="flex-1 overflow-y-auto p-4">
+                  <div v-if="interestedUsers.length === 0" class="text-center py-8 text-gray-400">
+                    <Heart class="w-12 h-12 mx-auto mb-3 text-gray-600" />
+                    <p>Aún no hay personas interesadas</p>
+                  </div>
+                  
+                  <div v-else class="space-y-3">
+                    <NuxtLink 
+                      v-for="user in interestedUsers" 
+                      :key="user.id" 
+                      :to="`/users/${user.id}`"
+                      @click="closeInterestedModal"
+                      class="flex items-center space-x-3 p-3 hover:bg-gray-700 rounded-lg transition-colors duration-200 cursor-pointer group"
+                    >
+                      <img 
+                        :src="user.avatar_url" 
+                        :alt="`Avatar de ${user.name}`" 
+                        class="w-12 h-12 rounded-full object-cover border-2 border-gray-700 group-hover:border-orange-500 transition-colors"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="text-white font-medium truncate group-hover:text-orange-400 transition-colors">
+                          {{ user.name }}
+                        </p>
+                        <p class="text-gray-400 text-sm truncate">
+                          {{ user.created_at ? formatDateShort(user.created_at) : 'Recientemente' }}
+                        </p>
+                      </div>
+                      <svg class="w-5 h-5 text-gray-600 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </NuxtLink>
+                  </div>
+                </div>
+                
+                <!-- Footer with count -->
+                <div class="p-4 border-t border-gray-700 bg-gray-750">
+                  <p class="text-center text-gray-400 text-sm">
+                    {{ interestedCount }} persona{{ interestedCount !== 1 ? 's' : '' }} interesada{{ interestedCount !== 1 ? 's' : '' }}
+                  </p>
+                </div>
               </div>
             </div>
+          </Transition>
+        </Teleport>
+
+        <!-- Information Links -->
+        <section v-if="event.information_links && event.information_links.length > 0" class="card mb-6" aria-labelledby="links-heading">
+          <h2 id="links-heading" class="text-xl font-semibold text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            Enlaces de Información
+          </h2>
+          <div class="space-y-3">
+            <a
+              v-for="(link, index) in event.information_links"
+              :key="index"
+              :href="link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center text-orange-400 hover:text-orange-300 transition-colors duration-200 p-3 bg-gray-700 hover:bg-gray-600 rounded-lg group"
+            >
+              <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span class="break-all">{{ link }}</span>
+              <svg class="w-4 h-4 ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
           </div>
-        </div>
+        </section>
 
         <section class="card" aria-labelledby="location-heading">
           <h2 id="location-heading" class="text-xl font-semibold text-white mb-4">Ubicación</h2>
@@ -251,7 +343,9 @@
       <aside class="space-y-6">
         <div class="card">
           <div class="flex space-x-2">
-            <button class="btn-secondary flex-1 flex items-center justify-center"
+            <button 
+              @click="openShareModal"
+              class="btn-secondary flex-1 flex items-center justify-center"
               aria-label="Compartir evento en redes sociales">
               <Share2 class="w-4 h-4 mr-2" aria-hidden="true" />
               Compartir
@@ -303,13 +397,176 @@
             <img :src="event.organizer.avatar_url" :alt="`Foto de perfil de ${event.organizer.name}`"
               class="w-16 h-16 rounded-lg object-cover" itemprop="image" />
             <div>
-              <h4 class="font-medium text-white hover:text-orange-400 transition-colors duration-200" itemprop="name">{{ event.organizer.name }}</h4>
+              <div class="flex items-center space-x-2">
+                <h4 class="font-medium text-white hover:text-orange-400 transition-colors duration-200" itemprop="name">{{ event.organizer.name }}</h4>
+                <!-- Verification Badge for verified organizers -->
+                <div v-if="event.organizer.is_verified" class="flex items-center">
+                  <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Organizador Verificado">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
               <p class="text-sm text-gray-400">
                 Miembro desde {{ event.organizer.member_since }}
               </p>
             </div>
           </NuxtLink>
         </div>
+
+        <!-- Pricing Section - Different display based on monetization type -->
+        <div class="card">
+          <h3 class="text-lg font-semibold text-white mb-4">Información de Entradas</h3>
+          
+          <!-- Free Event -->
+          <div v-if="event.monetization_type === 'free'" class="text-center py-4">
+            <div class="flex items-center justify-center space-x-2 text-green-500 mb-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-xl font-bold">Evento Gratuito</span>
+            </div>
+            <p class="text-gray-400 text-sm">No se requiere pago para asistir a este evento</p>
+          </div>
+
+          <!-- View Only Pricing -->
+          <div v-else-if="event.monetization_type === 'view_only'" class="text-center py-4">
+            <div class="mb-4">
+              <div class="text-orange-500 text-xl font-bold mb-2">
+                {{ formatPrice(event.prices?.[0]?.price || 0) }}
+              </div>
+              <p class="text-gray-400 text-sm">{{ event.prices?.[0]?.name || 'Entrada General' }}</p>
+            </div>
+            <div class="p-3 bg-yellow-900 border border-yellow-700 rounded-lg mb-3">
+              <p class="text-yellow-200 text-sm">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Precio solo para referencia. Contacta al organizador para comprar entradas.
+              </p>
+            </div>
+            <NuxtLink 
+              v-if="event.organizer"
+              :to="`/users/${event.organizer.id}`"
+              class="w-full bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Ver Perfil del Organizador</span>
+            </NuxtLink>
+          </div>
+
+          <!-- Pay at Door -->
+          <div v-else-if="event.monetization_type === 'pay_at_door'" class="text-center py-4">
+            <div class="mb-4">
+              <div class="text-orange-500 text-xl font-bold mb-2">Pago en Puerta</div>
+              <p class="text-gray-400 text-sm mb-3">Realiza el pago al llegar al evento</p>
+              <div v-if="event.prices && event.prices.length > 0" class="space-y-2">
+                <div 
+                  v-for="(price, index) in event.prices" 
+                  :key="index"
+                  class="p-2 bg-gray-700 rounded-lg"
+                >
+                  <div class="text-white text-sm">{{ price.name }}</div>
+                  <div class="text-orange-400 font-bold">{{ formatPrice(price.price) }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="p-3 bg-blue-900 border border-blue-700 rounded-lg mb-3">
+              <p class="text-blue-200 text-sm">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Paga directamente en la entrada del evento
+              </p>
+            </div>
+            <NuxtLink 
+              v-if="event.organizer"
+              :to="`/users/${event.organizer.id}`"
+              class="w-full bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Ver Perfil del Organizador</span>
+            </NuxtLink>
+          </div>
+
+          <!-- In-App Purchase -->
+          <div v-else-if="event.monetization_type === 'in_app'" class="py-4">
+            <div class="mb-4">
+              <div class="text-orange-500 text-xl font-bold mb-2">Compra Directa en la App</div>
+              <p class="text-gray-400 text-sm">Compra tus entradas directamente aquí</p>
+            </div>
+            
+            <!-- Price Tiers -->
+            <div v-if="event.prices && event.prices.length > 0" class="space-y-3 mb-4">
+              <div 
+                v-for="(price, index) in event.prices" 
+                :key="index"
+                class="flex items-center justify-between p-3 bg-gray-700 rounded-lg"
+              >
+                <div>
+                  <div class="text-white font-medium">{{ price.name }}</div>
+                  <div class="text-orange-500 font-bold">{{ formatPrice(price.price) }}</div>
+                </div>
+                <button 
+                  v-if="!isEventOwner"
+                  @click="openPurchaseModal"
+                  class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm"
+                >
+                  Comprar
+                </button>
+              </div>
+            </div>
+
+            <!-- Verified Organizer Badge -->
+            <div v-if="event.organizer?.is_verified" class="p-3 bg-green-900 border border-green-700 rounded-lg">
+              <div class="flex items-center space-x-2 text-green-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm font-medium">Organizador Verificado</span>
+              </div>
+              <p class="text-green-200 text-xs mt-1">Este organizador ha verificado su identidad</p>
+            </div>
+          </div>
+
+          <!-- Not Mine (Shared Event) -->
+          <div v-else-if="event.monetization_type === 'not_mine'" class="text-center py-4">
+            <div class="mb-4">
+              <div class="text-orange-500 text-xl font-bold mb-2">Evento Compartido</div>
+              <p class="text-gray-400 text-sm mb-3">Este evento fue compartido por la comunidad</p>
+              <div v-if="event.prices && event.prices.length > 0" class="space-y-2 mb-3">
+                <div 
+                  v-for="(price, index) in event.prices" 
+                  :key="index"
+                  class="p-2 bg-gray-700 rounded-lg"
+                >
+                  <div class="text-white text-sm">{{ price.name }}</div>
+                  <div class="text-orange-400 font-bold">{{ formatPrice(price.price) }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="p-3 bg-blue-900 border border-blue-700 rounded-lg mb-3">
+              <p class="text-blue-200 text-sm">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Fuente: {{ getEventSourceLabel(event.event_source) }}
+              </p>
+            </div>
+            <p class="text-gray-400 text-xs">
+              Contacta al organizador fuera de la plataforma para más detalles sobre cómo asistir
+            </p>
+          </div>
+
+          <!-- Default/Unknown monetization type -->
+          <div v-else class="text-center py-4">
+            <p class="text-gray-400 text-sm">Información de precios no disponible</p>
+          </div>
+        </div>
+
         <!-- Venue Card -->
         <div v-if="event.venue" class="card">
           <h3 class="text-lg font-semibold text-white mb-4">Venue</h3>
@@ -339,6 +596,11 @@
         </div>
       </aside>
     </article>
+
+    <!-- Event Memories Section (only if event has passed) -->
+    <div v-if="event" class="mt-8 max-w-4xl mx-auto">
+      <EventMemories :event-id="Number(event.id)" :event-date="event.date" />
+    </div>
 
     <!-- Posts Section -->
     <div v-if="event" class="mt-8 max-w-4xl mx-auto">
@@ -375,6 +637,13 @@
       @close="closePurchaseModal"
       @success="handlePurchaseSuccess"
     />
+
+    <!-- Share Modal -->
+    <ShareModal
+      :event-id="Number(eventId)"
+      :is-open="isShareModalOpen"
+      @close="closeShareModal"
+    />
   </div>
 </template>
 
@@ -395,6 +664,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import MapLeaflet from "~/components/MapLeaflet.vue";
 import TicketPurchaseModal from "~/components/TicketPurchaseModal.vue";
+import ShareModal from "~/components/ShareModal.vue";
 import { useUserStore } from "~/store/user";
 
 const event = ref<Event | null | undefined>(null);
@@ -442,9 +712,39 @@ const handlePurchaseSuccess = () => {
   router.push('/tickets');
 };
 
+// Share modal state
+const isShareModalOpen = ref(false);
+
+const openShareModal = () => {
+  isShareModalOpen.value = true;
+};
+
+const closeShareModal = () => {
+  isShareModalOpen.value = false;
+};
+
+// Interested users modal state (Instagram-style)
+const isInterestedModalOpen = ref(false);
+
+const openInterestedModal = () => {
+  if (interestedCount.value === 0) return;
+  isInterestedModalOpen.value = true;
+};
+
+const closeInterestedModal = () => {
+  isInterestedModalOpen.value = false;
+};
+
 onMounted(async () => {
   const L = await import('leaflet');
   await fetchEvent();
+  
+  // Track share token from URL
+  const shareToken = route.query.share as string;
+  if (shareToken) {
+    // Store share token in sessionStorage for conversion tracking
+    sessionStorage.setItem('event_share_token', shareToken);
+  }
 });
 
 const fetchEvent = async () => {
@@ -480,7 +780,9 @@ const handleToggleInterest = async () => {
   }
 
   try {
-    await toggleInterest(parseInt(eventId));
+    // Get share token from sessionStorage for conversion tracking
+    const shareToken = sessionStorage.getItem('event_share_token');
+    await toggleInterest(parseInt(eventId), shareToken || undefined);
   } catch (error: any) {
     console.error('Error toggling interest:', error);
     alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
@@ -500,6 +802,50 @@ const formatDate = (dateString: string) => {
     month: "long",
     day: "numeric",
   });
+};
+
+const formatDateShort = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 1) {
+    return 'Hoy';
+  } else if (diffDays === 1) {
+    return 'Ayer';
+  } else if (diffDays < 7) {
+    return `Hace ${diffDays} días`;
+  } else {
+    return date.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  }
+};
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+const getEventSourceLabel = (source: string | null | undefined) => {
+  if (!source) return 'Fuente desconocida';
+  
+  const labels: Record<string, string> = {
+    'redes_sociales': 'Redes Sociales',
+    'pagina_web': 'Página Web',
+    'cartel': 'Cartel/Publicidad',
+    'amigo': 'Amigo/Familiar',
+    'otro': 'Otro'
+  };
+  
+  return labels[source] || source;
 };
 
 // Structured data for the event
@@ -554,6 +900,15 @@ const structuredData = computed(() => {
 const isEventOwner = computed(() => {
   const { user } = useUserStore()
   return user && event.value && user.id === event.value.user_id
+});
+
+// Check if tickets can be purchased through the platform
+const canPurchaseTickets = computed(() => {
+  if (!event.value) return false;
+  
+  // Only allow ticket purchases for these monetization types
+  const purchasableTypes = ['in_app', 'platform', 'free'];
+  return purchasableTypes.includes(event.value.monetization_type || '');
 });
 
 // Breadcrumb structured data
@@ -713,3 +1068,54 @@ useHead(() => {
 });
 </script>
 
+<style scoped>
+/* Modal transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .relative,
+.modal-leave-active .relative {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-enter-from .relative {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+.modal-leave-to .relative {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+/* Custom scrollbar for modal */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.5) rgba(0, 0, 0, 0.2);
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.5);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.7);
+}
+</style>

@@ -52,16 +52,22 @@ export const useEventInterest = () => {
   /**
    * Toggle interest in an event
    */
-  const toggleInterest = async (eventId: number) => {
+  const toggleInterest = async (eventId: number, shareToken?: string) => {
     try {
       loading.value = true
       const url = `${baseUrl}/api/events/${eventId}/toggle-interest`
+      const body: any = {};
+      if (shareToken) {
+        body.share_token = shareToken;
+      }
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('zonora_token')}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined
       })
       
       if (!response.ok) {

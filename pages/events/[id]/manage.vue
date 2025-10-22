@@ -102,6 +102,13 @@
                 Invitaciones
               </button>
               <button
+                @click="activeTab = 'analytics'"
+                :class="activeTab === 'analytics' ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-300'"
+                class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+              >
+                Analíticas
+              </button>
+              <button
                 @click="activeTab = 'edit'"
                 :class="activeTab === 'edit' ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-300'"
                 class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
@@ -118,6 +125,11 @@
                 :event-id="eventId"
                 @invitation-cancelled="handleInvitationCancelled"
               />
+            </div>
+
+            <!-- Analytics Tab -->
+            <div v-else-if="activeTab === 'analytics'">
+              <EventShareAnalytics :event-id="eventId" />
             </div>
 
             <!-- Edit Tab -->

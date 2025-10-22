@@ -18,6 +18,11 @@ export interface User {
   profile_public?: boolean;
   social_links?: SocialLink[];
   is_admin?: boolean;
+  is_subscribed?: boolean;
+  is_verified?: boolean;
+  venueAdmin?: any | null;
+  eventOrganizer?: any | null;
+  stageWorker?: any | null;
 }
 
 export type LoginResponse =
@@ -336,6 +341,7 @@ export interface UserProfile {
   stats: UserStats;
   artists?: Artist[];
   followed_artists?: Artist[];
+  events?: Event[];
   created_at: string;
   updated_at: string;
 }
@@ -358,6 +364,7 @@ export interface UserActivity {
 export interface Ticket {
   id: number;
   ticket_number: string;
+  purchase_group_id?: string | null;
   user_id: number;
   event_id: number;
   price_tag_name: string;
@@ -432,4 +439,79 @@ export interface BankTransferInfo {
   account_number: string;
   rut?: string;
   additional_info?: Record<string, string>;
+}
+
+// Notification interface
+export interface Notification {
+  id: string;
+  type: string;
+  data: {
+    title: string;
+    message: string;
+    action_url?: string;
+    icon?: string;
+    event_id?: number;
+    artist_id?: number;
+    user_id?: number;
+    proposal_id?: number;
+    [key: string]: any;
+  };
+  read_at: string | null;
+  created_at: string;
+  notifiable_id?: number;
+  notifiable_type?: string;
+}
+
+// Event Media (Memories) interface
+export interface EventMedia {
+  id: number;
+  event_id: number;
+  user_id: number;
+  type: 'image' | 'link';
+  picture_id?: string;
+  picture_url?: string;
+  link?: string;
+  uploaded_at: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    name: string;
+    avatar_url?: string;
+  };
+}
+
+// Event Share interfaces
+export interface ShareAnalytics {
+  total_shares: number;
+  total_clicks: number;
+  unique_visitors: number;
+  interested_count: number;
+  purchased_count: number;
+  click_rate: number;
+  interest_conversion: number;
+  purchase_conversion: number;
+  timeline: TimelineData[];
+  top_sharers?: TopSharer[];
+}
+
+export interface TimelineData {
+  date: string;
+  clicks: number;
+}
+
+export interface TopSharer {
+  user_id: number;
+  user_name: string;
+  clicks: number;
+  conversions: {
+    interest: number;
+    purchase: number;
+  };
+}
+
+export interface ShareLinkResponse {
+  share_url: string;
+  token: string;
+  event_id: number;
 }
