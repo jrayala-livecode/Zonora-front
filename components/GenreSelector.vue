@@ -11,12 +11,12 @@
         :key="index"
         class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-500 text-white transition-colors duration-200"
       >
-        {{ genre }}
+        {{ getGenreName(genre) }}
         <button
           @click="removeGenre(index)"
           type="button"
           class="ml-2 hover:text-gray-200 focus:outline-none"
-          :aria-label="`Eliminar ${genre}`"
+          :aria-label="`Eliminar ${getGenreName(genre)}`"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useGenres } from '~/composables/useGenres'
 import type { Genre } from '~/composables/useGenres'
 
@@ -111,7 +111,7 @@ const { genres, isLoading, fetchGenres, getSuggestions } = useGenres()
 const inputValue = ref('')
 const showSuggestions = ref(false)
 const highlightedIndex = ref(-1)
-const selectedGenres = ref<string[]>([...props.modelValue])
+const selectedGenres = ref<any[]>([...props.modelValue])
 
 // Computed
 const filteredSuggestions = computed(() => {
@@ -124,12 +124,22 @@ const filteredSuggestions = computed(() => {
   // Filter out already selected genres
   return suggestions.filter(genre => 
     !selectedGenres.value.some(selected => 
-      selected.toLowerCase() === genre.name.toLowerCase()
+      getGenreName(selected).toLowerCase() === genre.name.toLowerCase()
     )
   )
 })
 
 // Methods
+const getGenreName = (genre: any): string => {
+  if (typeof genre === 'string') {
+    return genre
+  }
+  if (genre && typeof genre === 'object' && genre.name) {
+    return genre.name
+  }
+  return String(genre)
+}
+
 const handleInput = () => {
   showSuggestions.value = true
   highlightedIndex.value = -1
@@ -178,12 +188,12 @@ const selectGenre = (genreName: string) => {
   
   // Check if already selected (case-insensitive)
   const alreadySelected = selectedGenres.value.some(
-    selected => selected.toLowerCase() === trimmedGenre.toLowerCase()
+    selected => getGenreName(selected).toLowerCase() === trimmedGenre.toLowerCase()
   )
   
   if (!alreadySelected) {
     selectedGenres.value.push(trimmedGenre)
-    emit('update:modelValue', selectedGenres.value)
+    emit('update:modelValue', selectedGenres.value.map(genre => getGenreName(genre)))
   }
   
   inputValue.value = ''
@@ -196,7 +206,7 @@ const createNewGenre = () => {
 
 const removeGenre = (index: number) => {
   selectedGenres.value.splice(index, 1)
-  emit('update:modelValue', selectedGenres.value)
+  emit('update:modelValue', selectedGenres.value.map(genre => getGenreName(genre)))
 }
 
 // Load genres on mount

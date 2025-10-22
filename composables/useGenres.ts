@@ -1,112 +1,114 @@
-import { ref } from 'vue'
+import { ref } from 'vue';
+import type { Genre } from './useEvents';
 
-export interface Genre {
-  id: number
-  name: string
-}
-
-// Singleton state (outside composable function for shared state)
-const genres = ref<Genre[]>([])
-const isLoading = ref(false)
-const error = ref<string | null>(null)
+// Singleton state - defined OUTSIDE the composable
+const genres = ref<Genre[]>([]);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 export const useGenres = () => {
-  const config = useRuntimeConfig()
-  const API_URL = config.public.apiUrl
+  const { apiRequest } = useApiClient();
+  const config = useRuntimeConfig();
 
   /**
-   * Fetch all genres (public endpoint, no auth required)
-   * Returns cached genres if already fetched
+   * Fetch all genres from the API
    */
-  const fetchGenres = async (): Promise<Genre[]> => {
+  const fetchGenres = async (): Promise<void> => {
     if (genres.value.length > 0) {
-      // Return cached genres
-      return genres.value
+      // Already loaded, skip fetching
+      return;
     }
 
-    isLoading.value = true
-    error.value = null
+    isLoading.value = true;
+    error.value = null;
 
     try {
-      const response = await fetch(`${API_URL}/genres`, {
-        method: 'GET',
+      const response = await fetch(`${config.public.apiBaseUrl}/genres`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch genres');
+      }
+
+      const json = await response.json();
+      genres.value = json.data || [];
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error fetching genres';
+      console.error('Error fetching genres:', err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
+   * Create a new genre
+   */
+  const createGenre = async (name: string): Promise<Genre | null> => {
+    if (!name || name.trim().length === 0) {
+      error.value = 'Genre name is required';
+      return null;
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await apiRequest('/genres', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      })
+        body: JSON.stringify({ name: name.trim() }),
+      });
 
       if (!response.ok) {
-        // Don't throw error - just return empty array
-        // This allows the app to work even if genres endpoint fails
-        genres.value = []
-        return genres.value
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create genre');
       }
 
-      const result = await response.json()
-      genres.value = result.data || []
-      return genres.value
-    } catch (err: any) {
-      // Log error but don't throw - return empty array
-      error.value = err.message || 'Failed to fetch genres'
-      genres.value = []
-      return genres.value
+      const json = await response.json();
+      const newGenre = json.data;
+
+      // Add to local cache
+      genres.value.push(newGenre);
+
+      return newGenre;
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error creating genre';
+      console.error('Error creating genre:', err);
+      return null;
     } finally {
-      isLoading.value = false
+      isLoading.value = false;
     }
-  }
+  };
 
   /**
-   * Search genres by name (client-side filtering)
+   * Find a genre by name (case insensitive)
    */
-  const searchGenres = (query: string): Genre[] => {
-    if (!query) return genres.value
-
-    const lowerQuery = query.toLowerCase()
-    return genres.value.filter(genre => 
-      genre.name.toLowerCase().includes(lowerQuery)
-    )
-  }
+  const findGenreByName = (name: string): Genre | undefined => {
+    return genres.value.find(
+      (g) => g.name.toLowerCase() === name.toLowerCase()
+    );
+  };
 
   /**
-   * Refresh genres from server (force reload)
+   * Get or create a genre by name
+   * Returns the existing genre if found, otherwise creates a new one
    */
-  const refreshGenres = async (): Promise<Genre[]> => {
-    genres.value = [] // Clear cache
-    return fetchGenres()
-  }
-
-  /**
-   * Check if a genre exists by name (case-insensitive)
-   */
-  const genreExists = (name: string): boolean => {
-    const lowerName = name.toLowerCase()
-    return genres.value.some(genre => 
-      genre.name.toLowerCase() === lowerName
-    )
-  }
-
-  /**
-   * Get genre suggestions based on partial input
-   */
-  const getSuggestions = (input: string, limit: number = 10): Genre[] => {
-    if (!input || input.length < 1) return genres.value.slice(0, limit)
-
-    const results = searchGenres(input)
-    return results.slice(0, limit)
-  }
+  const getOrCreateGenre = async (name: string): Promise<Genre | null> => {
+    const existing = findGenreByName(name);
+    if (existing) {
+      return existing;
+    }
+    return await createGenre(name);
+  };
 
   return {
-    // State
-    genres,
-    isLoading,
-    error,
-    
-    // Methods
+    genres: readonly(genres),
+    isLoading: readonly(isLoading),
+    error: readonly(error),
     fetchGenres,
-    searchGenres,
-    refreshGenres,
-    genreExists,
-    getSuggestions,
-  }
-}
-
+    createGenre,
+    findGenreByName,
+    getOrCreateGenre,
+  };
+};
