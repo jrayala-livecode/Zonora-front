@@ -489,9 +489,17 @@ const openEditModal = (artist: any) => {
   editForm.profile_picture_url = artist.profile_picture_url || '';
   editForm.is_public = artist.is_public !== false;
   
-  // Handle genres - ensure it's an array
+  // Handle genres - extract names from objects if needed
   if (artist.genres && Array.isArray(artist.genres)) {
-    editForm.genres = [...artist.genres];
+    editForm.genres = artist.genres.map((genre: any) => {
+      if (typeof genre === 'string') {
+        return genre;
+      }
+      if (genre && typeof genre === 'object' && genre.name) {
+        return genre.name;
+      }
+      return String(genre);
+    });
   } else {
     editForm.genres = [];
   }

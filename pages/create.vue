@@ -286,6 +286,84 @@
                 <div id="links-help" class="sr-only">Agrega enlaces adicionales con información del evento</div>
               </div>
 
+              <!-- Genre Multi-Selector -->
+              <div>
+                <label for="event-genres" class="block text-sm font-medium text-gray-300 mb-2">Géneros Musicales</label>
+                <div class="space-y-2">
+                  <!-- Selected Genres Display -->
+                  <div v-if="selectedGenres.length > 0" class="flex flex-wrap gap-2">
+                    <span
+                      v-for="genre in selectedGenres"
+                      :key="genre.id"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-500 text-white"
+                    >
+                      {{ genre.name }}
+                      <button
+                        @click="removeGenre(genre.id)"
+                        type="button"
+                        class="ml-2 hover:text-gray-200 focus:outline-none"
+                        :aria-label="`Eliminar ${genre.name}`"
+                      >
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    </span>
+                  </div>
+
+                  <!-- Genre Input/Dropdown -->
+                  <div class="relative">
+                    <input
+                      id="event-genres"
+                      v-model="genreInput"
+                      type="text"
+                      placeholder="Escribe para buscar o crear un género..."
+                      class="input-field w-full"
+                      @focus="showGenreDropdown = true"
+                      @input="filterGenres"
+                      @keydown.enter.prevent="addGenreFromInput"
+                      aria-describedby="genres-help"
+                    />
+                    
+                    <!-- Dropdown with filtered genres -->
+                    <div
+                      v-if="showGenreDropdown && filteredGenresList.length > 0"
+                      class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                    >
+                      <button
+                        v-for="genre in filteredGenresList"
+                        :key="genre.id"
+                        type="button"
+                        @click="addGenre(genre)"
+                        class="w-full text-left px-4 py-2 hover:bg-gray-700 text-gray-300 transition-colors"
+                      >
+                        {{ genre.name }}
+                      </button>
+                    </div>
+
+                    <!-- Create new genre option -->
+                    <div
+                      v-if="showGenreDropdown && genreInput && !findExactGenreMatch()"
+                      class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        @click="createAndAddGenre"
+                        class="w-full text-left px-4 py-2 hover:bg-gray-700 text-orange-400 transition-colors flex items-center"
+                      >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Crear "{{ genreInput }}"
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p id="genres-help" class="text-xs text-gray-500 mt-1">
+                  Selecciona de la lista o escribe para crear nuevos géneros
+                </p>
+              </div>
+
               <!-- Event Source Field (only for "not_mine" events) -->
               <div v-if="eventType === 'not_mine'">
                 <label for="event-source" class="block text-sm font-medium text-gray-300 mb-2">¿Cómo encontraste este evento? *</label>
@@ -854,8 +932,9 @@ definePageMeta({
 import MapSelector from '~/components/MapSelector.vue';
 import ArtistSelector from '~/components/ArtistSelector.vue';
 import { Upload, X, Calendar, Plus, Trash2 } from 'lucide-vue-next';
-import { reactive, ref, watch } from 'vue';
-import { useEvents } from '~/composables/useEvents';
+import { reactive, ref, watch, computed, onMounted } from 'vue';
+import { useEvents, type Genre } from '~/composables/useEvents';
+import { useGenres } from '~/composables/useGenres';
 import { useModal } from '~/composables/useModal';
 import { useVerification } from '~/composables/useVerification';
 import { useUserStore } from '~/store/user';
@@ -867,6 +946,7 @@ const router = useRouter();
 const { isAuthenticated } = useAuth();
 const { createEvent } = useEvents();
 const { checkVerificationStatus, isVerificationApproved } = useVerification();
+const { genres, fetchGenres, createGenre, findGenreByName } = useGenres();
 const token = useUserStore().token;
 const config = useRuntimeConfig();
 
@@ -903,12 +983,25 @@ const form = reactive({
   category: 'Música',
   // Artists field
   artists: [] as Artist[],
+  // Genres field
+  genres: [] as number[],
   // Pricing fields
   show_prices: false,
   priceTiers: [] as PriceTier[],
   currency: 'USD',
   // New monetization fields
   event_source: '',
+});
+
+// Genre selector state
+const selectedGenres = ref<Genre[]>([]);
+const genreInput = ref('');
+const showGenreDropdown = ref(false);
+const filteredGenresList = ref<Genre[]>([]);
+
+// Load genres on mount
+onMounted(async () => {
+  await fetchGenres();
 });
 
 const selectedMapLocation = ref<{ lat: number; lng: number } | null>(null)
@@ -1143,6 +1236,71 @@ const validateStep3 = async () => {
 };
 
 
+// Genre handling functions
+const filterGenres = () => {
+  if (!genreInput.value || genreInput.value.trim() === '') {
+    filteredGenresList.value = genres.value.filter(
+      (g) => !selectedGenres.value.some((sg) => sg.id === g.id)
+    );
+  } else {
+    const searchTerm = genreInput.value.toLowerCase();
+    filteredGenresList.value = genres.value.filter(
+      (g) =>
+        g.name.toLowerCase().includes(searchTerm) &&
+        !selectedGenres.value.some((sg) => sg.id === g.id)
+    );
+  }
+};
+
+const findExactGenreMatch = (): boolean => {
+  if (!genreInput.value) return false;
+  return !!findGenreByName(genreInput.value);
+};
+
+const addGenre = (genre: Genre) => {
+  if (!selectedGenres.value.some((g) => g.id === genre.id)) {
+    selectedGenres.value.push(genre);
+    form.genres.push(genre.id);
+  }
+  genreInput.value = '';
+  showGenreDropdown.value = false;
+  filterGenres();
+};
+
+const removeGenre = (genreId: number) => {
+  selectedGenres.value = selectedGenres.value.filter((g) => g.id !== genreId);
+  form.genres = form.genres.filter((id) => id !== genreId);
+  filterGenres();
+};
+
+const createAndAddGenre = async () => {
+  if (!genreInput.value || genreInput.value.trim() === '') return;
+
+  const newGenre = await createGenre(genreInput.value.trim());
+  if (newGenre) {
+    addGenre(newGenre);
+  }
+};
+
+const addGenreFromInput = () => {
+  const exactMatch = findGenreByName(genreInput.value);
+  if (exactMatch) {
+    addGenre(exactMatch);
+  } else if (genreInput.value && genreInput.value.trim()) {
+    createAndAddGenre();
+  }
+};
+
+// Close dropdown when clicking outside
+if (process.client) {
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('#event-genres')) {
+      showGenreDropdown.value = false;
+    }
+  });
+}
+
 const onImageSelected = (e: Event) => {
   const input = e.target as HTMLInputElement;
   if (input.files && input.files[0]) {
@@ -1202,6 +1360,9 @@ const createEventHandler = async () => {
       .map(link => link.trim())
       .filter(link => link !== '')
       .forEach(link => formData.append('information_links[]', link));
+
+    // Add genres
+    form.genres.forEach(genreId => formData.append('genres[]', genreId.toString()));
 
     // status_id and commune_id are handled internally by the system
     formData.append('category', form.category);
@@ -1263,12 +1424,12 @@ const createEventHandler = async () => {
     const createdEvent = await createEvent(formData);
 
     useModal().showSuccess(
-      '¡Evento creado exitosamente!',
-      `${form.name} ha sido creado. Ahora puedes invitar artistas a participar.`
+      '¡Evento enviado para revisión!',
+      `${form.name} ha sido enviado exitosamente. Nuestro equipo lo revisará y, si todo está en orden, será publicado a la brevedad. Te notificaremos una vez que esté aprobado.`
     );
 
-    // Redirect to invitation page
-    router.push(`/events/${createdEvent.id}/invite`);
+    // Redirect to events page
+    router.push('/events');
   } catch (error) {
     console.error(error);
     useModal().showError('Error al crear evento', 'Por favor verifica los datos e inténtalo de nuevo.');

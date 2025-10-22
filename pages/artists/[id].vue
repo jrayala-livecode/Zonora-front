@@ -109,7 +109,14 @@
             <!-- Compact Info -->
             <div class="p-3">
               <h1 class="text-lg font-bold text-white mb-0.5">{{ artist.stage_name }}</h1>
-              <p v-if="artist.user" class="text-xs text-gray-400 mb-2">{{ artist.user.name }}</p>
+              <p v-if="artist.user" class="text-xs text-gray-400 mb-2">
+                <NuxtLink 
+                  :to="`/users/${artist.user.id}`" 
+                  class="text-gray-400 hover:text-orange-400 transition-colors duration-200 cursor-pointer"
+                >
+                  {{ artist.user.name }}
+                </NuxtLink>
+              </p>
               
               <!-- Genres -->
               <div v-if="artist.genres && artist.genres.length > 0" class="mb-2">

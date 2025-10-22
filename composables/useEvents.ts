@@ -9,6 +9,12 @@ export interface Organizer {
   name: string;
   member_since: number;
   avatar_url: string;
+  is_verified?: boolean;
+}
+
+export interface Genre {
+  id: number;
+  name: string;
 }
 
 export interface Event {
@@ -33,6 +39,7 @@ export interface Event {
     profile_picture_url?: string;
     genres?: string[];
   }>;
+  genres?: Genre[];
   prices?: Array<{
     name: string;
     price: number;
@@ -59,6 +66,9 @@ export interface Event {
     name: string;
     email: string;
   };
+  monetization_type?: 'free' | 'view_only' | 'pay_at_door' | 'in_app' | 'not_mine';
+  event_source?: 'redes_sociales' | 'pagina_web' | 'cartel' | 'amigo' | 'otro';
+  information_links?: string[];
 }
 
 export interface PaginatedEvents {
@@ -119,6 +129,7 @@ function mapApiEventToEvent(apiEvent: any): Event {
       name: apiEvent.organizer.name || '',
       member_since: apiEvent.organizer.member_since || 0,
       avatar_url: apiEvent.organizer.avatar_url || '',
+      is_verified: apiEvent.organizer.is_verified || false,
     }
     : undefined;
 
@@ -137,6 +148,8 @@ function mapApiEventToEvent(apiEvent: any): Event {
     longitude: apiEvent.longitude || null,
     organizer,
     venue: apiEvent.venue || null,
+    artists: apiEvent.artists || [],
+    genres: apiEvent.genres || [],
     prices: apiEvent.prices || [],
     price_range: apiEvent.price_range || '',
     formatted_prices: apiEvent.formatted_prices || [],
@@ -145,7 +158,10 @@ function mapApiEventToEvent(apiEvent: any): Event {
     approved_by: apiEvent.approved_by || null,
     approved_at: apiEvent.approved_at || null,
     rejection_reason: apiEvent.rejection_reason || null,
-    approver: apiEvent.approver || null
+    approver: apiEvent.approver || null,
+    monetization_type: apiEvent.monetization_type || 'free',
+    event_source: apiEvent.event_source || null,
+    information_links: apiEvent.information_links || []
   };
 }
 

@@ -119,6 +119,31 @@ export const useUserProfile = () => {
   };
 
   /**
+   * Fetch events user is interested in
+   */
+  const fetchInterestedEvents = async (idOrUsername: string | number) => {
+    try {
+      const response = await fetch(
+        `${config.public.apiBaseUrl}/users/${idOrUsername}/interested-events`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch interested events');
+      }
+      
+      return await response.json();
+    } catch (err: any) {
+      console.error('Error fetching interested events:', err);
+      throw err;
+    }
+  };
+
+  /**
    * Update social links (authenticated)
    */
   const updateSocialLinks = async (socialLinks: SocialLink[]) => {
@@ -187,6 +212,7 @@ export const useUserProfile = () => {
     fetchUserActivity,
     fetchUserArtists,
     fetchUserEvents,
+    fetchInterestedEvents,
     updateSocialLinks,
     updateProfileSettings,
     clearProfile,

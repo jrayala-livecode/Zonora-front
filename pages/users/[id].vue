@@ -187,20 +187,20 @@
           <!-- Events Grid -->
           <div v-if="userProfile.events.length > 0" class="space-y-4">
             <NuxtLink
-              v-for="event in paginatedEvents"
-              :key="event.id"
-              :to="`/events/${event.id}`"
+              v-for="eventItem in paginatedEvents"
+              :key="eventItem.id"
+              :to="`/events/${eventItem.id}`"
               class="block bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer"
             >
               <div class="flex items-start space-x-4">
                 <!-- Event Image -->
                 <div class="flex-shrink-0">
                   <img
-                    v-if="event.image_url && !imageErrors[event.id]"
-                    :src="event.image_url"
-                    :alt="event.name"
+                    v-if="eventItem.image_url && !imageErrors[eventItem.id]"
+                    :src="eventItem.image_url"
+                    :alt="eventItem.name"
                     class="w-16 h-16 rounded-lg object-cover"
-                    @error="handleImageError(event.id)"
+                    @error="() => handleImageError(eventItem.id)"
                   />
                   <div v-else class="w-16 h-16 rounded-lg bg-orange-600 flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,10 +211,10 @@
 
                 <!-- Event Info -->
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-medium text-white truncate">{{ event.name }}</h4>
-                  <p class="text-sm text-gray-400 mt-1">{{ formatEventDate(event.date) }}</p>
-                  <p v-if="event.venue" class="text-sm text-gray-400">{{ event.venue.name }}</p>
-                  <p v-if="event.description" class="text-sm text-gray-300 mt-2 line-clamp-2">{{ event.description }}</p>
+                  <h4 class="font-medium text-white truncate">{{ eventItem.name }}</h4>
+                  <p class="text-sm text-gray-400 mt-1">{{ formatEventDate(eventItem.date) }}</p>
+                  <p v-if="eventItem.venue" class="text-sm text-gray-400">{{ eventItem.venue.name }}</p>
+                  <p v-if="eventItem.description" class="text-sm text-gray-300 mt-2 line-clamp-2">{{ eventItem.description }}</p>
                 </div>
 
                 <!-- Event Status -->
@@ -222,12 +222,12 @@
                   <span
                     :class="[
                       'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                      isEventPast(event.date)
+                      isEventPast(eventItem.date)
                         ? 'bg-gray-600 text-gray-300'
                         : 'bg-green-600 text-green-100'
                     ]"
                   >
-                    {{ isEventPast(event.date) ? 'Finalizado' : 'Próximo' }}
+                    {{ isEventPast(eventItem.date) ? 'Finalizado' : 'Próximo' }}
                   </span>
                 </div>
               </div>
@@ -270,6 +270,140 @@
                 :class="[
                   'px-3 py-1 text-sm rounded-lg transition',
                   currentPage === totalPages
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-500'
+                ]"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interested Events -->
+        <div v-if="interestedEvents.length > 0" class="bg-gray-800 rounded-lg p-6 shadow-lg">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4 md:mb-0 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Eventos de Interés ({{ interestedEvents.length }})
+            </h3>
+            
+            <!-- Filter Toggle -->
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-400">Mostrar:</span>
+              <button
+                @click="showPastInterestedEvents = false"
+                :class="[
+                  'px-3 py-1 text-xs rounded-full transition',
+                  !showPastInterestedEvents 
+                    ? 'bg-orange-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ]"
+              >
+                Próximos
+              </button>
+              <button
+                @click="showPastInterestedEvents = true"
+                :class="[
+                  'px-3 py-1 text-xs rounded-full transition',
+                  showPastInterestedEvents 
+                    ? 'bg-orange-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ]"
+              >
+                Pasados
+              </button>
+            </div>
+          </div>
+
+          <!-- Events Grid -->
+          <div v-if="filteredInterestedEvents.length > 0" class="space-y-4">
+            <NuxtLink
+              v-for="eventItem in paginatedInterestedEvents"
+              :key="eventItem.id"
+              :to="`/events/${eventItem.id}`"
+              class="block bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer"
+            >
+              <div class="flex items-start space-x-4">
+                <!-- Event Image -->
+                <div class="flex-shrink-0">
+                  <img
+                    v-if="eventItem.image_url && !imageErrors[eventItem.id]"
+                    :src="eventItem.image_url"
+                    :alt="eventItem.name"
+                    class="w-16 h-16 rounded-lg object-cover"
+                    @error="() => handleImageError(eventItem.id)"
+                  />
+                  <div v-else class="w-16 h-16 rounded-lg bg-orange-600 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Event Info -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-medium text-white truncate">{{ eventItem.name }}</h4>
+                  <p class="text-sm text-gray-400 mt-1">{{ formatEventDate(eventItem.date) }}</p>
+                  <p v-if="eventItem.venue" class="text-sm text-gray-400">{{ eventItem.venue.name }}</p>
+                  <p v-if="eventItem.description" class="text-sm text-gray-300 mt-2 line-clamp-2">{{ eventItem.description }}</p>
+                </div>
+
+                <!-- Event Status -->
+                <div class="flex-shrink-0">
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                      isEventPast(eventItem.date)
+                        ? 'bg-gray-600 text-gray-300'
+                        : 'bg-green-600 text-green-100'
+                    ]"
+                  >
+                    {{ isEventPast(eventItem.date) ? 'Finalizado' : 'Próximo' }}
+                  </span>
+                </div>
+              </div>
+            </NuxtLink>
+          </div>
+
+          <!-- No Events Message -->
+          <div v-else class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 class="text-lg font-medium text-gray-400 mb-2">No hay eventos</h3>
+            <p class="text-gray-500">No hay eventos {{ showPastInterestedEvents ? 'pasados' : 'próximos' }} de interés.</p>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="totalInterestedPages > 1" class="mt-6 flex items-center justify-between">
+            <div class="text-sm text-gray-400">
+              Mostrando {{ (interestedEventsPage - 1) * 5 + 1 }} - {{ Math.min(interestedEventsPage * 5, filteredInterestedEvents.length) }} de {{ filteredInterestedEvents.length }} eventos
+            </div>
+            <div class="flex items-center space-x-2">
+              <button
+                @click="interestedEventsPage = Math.max(1, interestedEventsPage - 1)"
+                :disabled="interestedEventsPage === 1"
+                :class="[
+                  'px-3 py-1 text-sm rounded-lg transition',
+                  interestedEventsPage === 1
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-500'
+                ]"
+              >
+                Anterior
+              </button>
+              <span class="text-sm text-gray-400">
+                Página {{ interestedEventsPage }} de {{ totalInterestedPages }}
+              </span>
+              <button
+                @click="interestedEventsPage = Math.min(totalInterestedPages, interestedEventsPage + 1)"
+                :disabled="interestedEventsPage === totalInterestedPages"
+                :class="[
+                  'px-3 py-1 text-sm rounded-lg transition',
+                  interestedEventsPage === totalInterestedPages
                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                     : 'bg-gray-600 text-white hover:bg-gray-500'
                 ]"
@@ -374,7 +508,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
-const { fetchUserProfile, fetchUserEvents, userProfile, isLoading, error, clearProfile } = useUserProfile();
+const { fetchUserProfile, fetchUserEvents, fetchInterestedEvents, userProfile, isLoading, error, clearProfile } = useUserProfile();
 const { user } = useAuth();
 
 const idOrUsername = computed(() => route.params.id as string);
@@ -389,11 +523,16 @@ const currentPage = ref(1);
 const eventsPerPage = 5;
 const imageErrors = ref<Record<string, boolean>>({});
 
+// Interested events state
+const interestedEvents = ref<any[]>([]);
+const showPastInterestedEvents = ref(false);
+const interestedEventsPage = ref(1);
+
 const filteredEvents = computed(() => {
   if (!userProfile.value?.events) return [];
   
   const now = new Date();
-  return userProfile.value.events.filter(event => {
+  return userProfile.value.events.filter((event: any) => {
     const eventDate = new Date(event.date);
     return showPastEvents.value ? eventDate < now : eventDate >= now;
   });
@@ -407,6 +546,27 @@ const paginatedEvents = computed(() => {
 
 const totalPages = computed(() => {
   return Math.ceil(filteredEvents.value.length / eventsPerPage);
+});
+
+// Interested events filtering and pagination
+const filteredInterestedEvents = computed(() => {
+  if (!interestedEvents.value.length) return [];
+  
+  const now = new Date();
+  return interestedEvents.value.filter(event => {
+    const eventDate = new Date(event.date);
+    return showPastInterestedEvents.value ? eventDate < now : eventDate >= now;
+  });
+});
+
+const paginatedInterestedEvents = computed(() => {
+  const start = (interestedEventsPage.value - 1) * eventsPerPage;
+  const end = start + eventsPerPage;
+  return filteredInterestedEvents.value.slice(start, end);
+});
+
+const totalInterestedPages = computed(() => {
+  return Math.ceil(filteredInterestedEvents.value.length / eventsPerPage);
 });
 
 const formatEventDate = (dateString: string) => {
@@ -431,18 +591,24 @@ const handleImageError = (eventId: string) => {
 const loadProfile = async () => {
   await fetchUserProfile(idOrUsername.value);
   
-  // Also fetch user events if profile was loaded successfully
+  // Also fetch user events and interested events if profile was loaded successfully
   if (userProfile.value) {
     try {
       const eventsResponse = await fetchUserEvents(idOrUsername.value);
-      console.log('Events response:', eventsResponse);
       if (eventsResponse && eventsResponse.data) {
-        // Add events to the user profile
         userProfile.value.events = eventsResponse.data;
-        console.log('Events added to profile:', userProfile.value.events);
       }
     } catch (error) {
       console.error('Error fetching user events:', error);
+    }
+
+    try {
+      const interestedResponse = await fetchInterestedEvents(idOrUsername.value);
+      if (interestedResponse && interestedResponse.data) {
+        interestedEvents.value = interestedResponse.data;
+      }
+    } catch (error) {
+      console.error('Error fetching interested events:', error);
     }
   }
 };
@@ -469,6 +635,10 @@ const getSocialIcon = (platform: string): string => {
 // Reset pagination when filter changes
 watch(showPastEvents, () => {
   currentPage.value = 1;
+});
+
+watch(showPastInterestedEvents, () => {
+  interestedEventsPage.value = 1;
 });
 
 onMounted(() => {

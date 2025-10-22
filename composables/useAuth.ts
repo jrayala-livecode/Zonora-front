@@ -45,6 +45,12 @@ export const useAuth = () => {
           avatar: user.avatar_url || user.avatar || '',
           description: user.description ?? '',
           joinedAt: user.created_at ?? '',
+          is_subscribed: user.is_subscribed ?? false,
+          is_verified: user.is_verified ?? false,
+          is_admin: user.is_admin ?? false,
+          venueAdmin: user.venue_admin || null,
+          eventOrganizer: user.event_organizer || null,
+          stageWorker: user.stage_worker || null,
         };
 
         userStore.setUser(normalizedUser);
@@ -108,6 +114,12 @@ export const useAuth = () => {
         avatar: loggedInUser.avatar_url ?? '',
         description: loggedInUser.description ?? '',
         joinedAt: loggedInUser.created_at ?? '',
+        is_subscribed: loggedInUser.is_subscribed ?? false,
+        is_verified: loggedInUser.is_verified ?? false,
+        is_admin: loggedInUser.is_admin ?? false,
+        venueAdmin: loggedInUser.venue_admin || null,
+        eventOrganizer: loggedInUser.event_organizer || null,
+        stageWorker: loggedInUser.stage_worker || null,
       };
 
       userStore.setUser(normalizedUser);
@@ -165,6 +177,12 @@ export const useAuth = () => {
         avatar: user.avatar_url || user.avatar || '',
         description: user.description ?? '',
         joinedAt: user.created_at ?? '',
+        is_subscribed: user.is_subscribed ?? false,
+        is_verified: user.is_verified ?? false,
+        is_admin: user.is_admin ?? false,
+        venueAdmin: user.venue_admin || null,
+        eventOrganizer: user.event_organizer || null,
+        stageWorker: user.stage_worker || null,
       };
 
       userStore.setUser(normalizedUser);
@@ -242,6 +260,43 @@ export const useAuth = () => {
     }
   };
 
+  const fetchUser = async () => {
+    try {
+      if (!userStore.token) {
+        return false;
+      }
+
+      const userData = await $fetch('/me', {
+        baseURL: apiBaseUrl,
+        headers: {
+          Authorization: `Bearer ${userStore.token}`,
+        },
+      });
+
+      const user = (userData as any).user || userData;
+      const normalizedUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar_url || user.avatar || '',
+        description: user.description ?? '',
+        joinedAt: user.created_at ?? '',
+        is_subscribed: user.is_subscribed ?? false,
+        is_verified: user.is_verified ?? false,
+        is_admin: user.is_admin ?? false,
+        venueAdmin: user.venue_admin || null,
+        eventOrganizer: user.event_organizer || null,
+        stageWorker: user.stage_worker || null,
+      };
+
+      userStore.setUser(normalizedUser);
+      return true;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return false;
+    }
+  };
+
   return {
     user: computed(() => userStore.user),
     isAuthenticated,
@@ -251,6 +306,7 @@ export const useAuth = () => {
     logout,
     register,
     checkAuth,
-    initAuth
+    initAuth,
+    fetchUser
   };
 };
