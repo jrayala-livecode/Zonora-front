@@ -323,6 +323,66 @@ export const useTickets = () => {
     return myTickets.value.filter(ticket => ticket.event_id === eventId)
   }
 
+  /**
+   * Validate all tickets in a purchase group (bulk approval)
+   */
+  const validateReceiptGroup = async (purchaseGroupId: string) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const { apiRequest } = useApiClient()
+      const response = await apiRequest(`${API_URL}/tickets/group/${purchaseGroupId}/validate-receipt`, {
+        method: 'PUT'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Error al validar grupo de recibos')
+      }
+
+      const data = await response.json()
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Error al validar grupo de recibos'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Reject all tickets in a purchase group (bulk rejection)
+   */
+  const rejectReceiptGroup = async (purchaseGroupId: string, reason?: string) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const { apiRequest } = useApiClient()
+      const response = await apiRequest(`${API_URL}/tickets/group/${purchaseGroupId}/reject-receipt`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Error al rechazar grupo de recibos')
+      }
+
+      const data = await response.json()
+      return data
+    } catch (err: any) {
+      error.value = err.message || 'Error al rechazar grupo de recibos'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     // State
     myTickets,
@@ -338,6 +398,8 @@ export const useTickets = () => {
     getEventTickets,
     validateReceipt,
     rejectReceipt,
+    validateReceiptGroup,
+    rejectReceiptGroup,
     searchTicketsByEmail,
     verifyTicket,
     

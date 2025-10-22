@@ -112,89 +112,164 @@
           </div>
         </div>
 
-        <!-- Tickets List -->
+        <!-- Grouped Tickets List -->
         <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-700">
             <h2 class="text-xl font-semibold text-white">Tickets del Evento</h2>
           </div>
 
-          <div v-if="filteredTickets.length === 0" class="p-8 text-center text-gray-400">
+          <div v-if="filteredGroups.length === 0" class="p-8 text-center text-gray-400">
             <p>No hay tickets que coincidan con los filtros</p>
           </div>
 
           <div v-else class="divide-y divide-gray-700">
+            <!-- Iterate over ticket groups -->
             <div
-              v-for="ticket in filteredTickets"
-              :key="ticket.id"
-              class="p-6 hover:bg-gray-750 transition-colors"
+              v-for="group in filteredGroups"
+              :key="group.id"
+              class="transition-all"
+              :class="getGroupBorderClass(group)"
             >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                  <!-- QR Code -->
-                  <div class="w-16 h-16 bg-white p-2 rounded-lg">
-                    <img 
-                      :src="getQrCodeUrl(ticket.id)" 
-                      alt="QR Code"
-                      class="w-full h-full"
-                      @error="qrError = true"
-                    />
+              <!-- GROUP HEADER -->
+              <div class="p-6 hover:bg-gray-750 transition-colors">
+                <div class="flex items-start justify-between">
+                  <!-- Left: Group Info -->
+                  <div class="flex-1">
+                    <!-- Group or Single Ticket Title -->
+                    <div class="flex items-center gap-3 mb-2 flex-wrap">
+                      <h3 class="text-lg font-semibold text-white">
+                <span v-if="group.isGroup">
+                  🎫 Compra Grupal #{{ group.groupId?.substring(0, 8) }}
+                </span>
+                        <span v-else>
+                          🎫 Ticket #{{ group.tickets[0].ticket_number }}
+                        </span>
+                      </h3>
+                      
+                      <!-- Badge: Group size -->
+                      <span v-if="group.isGroup" class="px-2 py-1 bg-gray-700 rounded text-sm text-gray-300">
+                        {{ group.tickets.length }} tickets
+                      </span>
+                      
+                      <!-- Status Badge -->
+                      <span :class="getGroupStatusBadge(group)" class="px-3 py-1 rounded text-sm font-medium">
+                        {{ getGroupStatusLabel(group) }}
+                      </span>
+                    </div>
+
+                    <!-- User Info -->
+                    <div class="space-y-1 text-sm text-gray-400 mb-3">
+                      <p>
+                        <span class="text-gray-500">Usuario:</span>
+                        <span class="text-gray-300">{{ group.tickets[0].user?.name }}</span>
+                        ({{ group.tickets[0].user?.email }})
+                      </p>
+                      
+                      <!-- Total or Price -->
+                      <p v-if="group.isGroup">
+                        <span class="text-gray-500">Total:</span>
+                        <span class="text-white font-semibold">
+                          ${{ formatPrice(group.totalAmount.toString()) }}
+                        </span>
+                        <span class="text-gray-400">
+                          ({{ group.tickets.length }} × ${{ formatPrice(group.tickets[0].price_paid.toString()) }})
+                        </span>
+                      </p>
+                      <p v-else>
+                        <span class="text-gray-500">Precio:</span>
+                        <span class="text-white font-semibold">${{ formatPrice(group.tickets[0].price_paid.toString()) }}</span>
+                      </p>
+                      
+                      <p>
+                        <span class="text-gray-500">Comprado:</span>
+                        {{ formatDate(group.tickets[0].purchased_at) }}
+                      </p>
+                    </div>
+
+                    <!-- Expandable section for grouped tickets -->
+                    <div v-if="group.isGroup" class="mt-3">
+                      <button
+                        @click="toggleGroupExpanded(group.id)"
+                        class="text-orange-400 hover:text-orange-300 text-sm font-medium flex items-center gap-2"
+                      >
+                        <svg 
+                          class="w-4 h-4 transform transition-transform" 
+                          :class="{ 'rotate-180': expandedGroups[group.id] }"
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <span>{{ expandedGroups[group.id] ? 'Ocultar' : 'Ver' }} tickets individuales</span>
+                      </button>
+
+                      <!-- Expanded individual tickets -->
+                      <div v-if="expandedGroups[group.id]" class="mt-3 space-y-2 pl-6 border-l-2 border-gray-700">
+                        <div
+                          v-for="ticket in group.tickets"
+                          :key="ticket.id"
+                          class="p-3 bg-gray-750 rounded border border-gray-600 flex items-center justify-between"
+                        >
+                          <div class="flex items-center gap-3">
+                            <!-- Mini QR Code -->
+                            <div class="w-12 h-12 bg-white p-1 rounded">
+                              <img 
+                                :src="getQrCodeUrl(ticket.id)" 
+                                alt="QR"
+                                class="w-full h-full"
+                              />
+                            </div>
+                            <div>
+                              <p class="text-white font-medium">{{ ticket.ticket_number }}</p>
+                              <p class="text-xs text-gray-400">{{ getStatusLabel(ticket) }}</p>
+                            </div>
+                          </div>
+                          <div class="flex gap-2">
+                            <!-- Mark as Used (only for validated) -->
+                            <button
+                              v-if="ticket.receipt_validation_status === 'validated' && ticket.status === 'active'"
+                              @click="markAsUsed(ticket.id)"
+                              class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
+                            >
+                              Usar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <!-- Ticket Info -->
-                  <div>
-                    <h3 class="font-semibold text-white">Ticket #{{ ticket.ticket_number }}</h3>
-                    <p class="text-sm text-gray-400">{{ ticket.user?.name }}</p>
-                    <p class="text-sm text-gray-400">{{ ticket.user?.email }}</p>
-                    <p class="text-sm text-gray-400">
-                      {{ formatDate(ticket.purchased_at) }}
-                    </p>
-                  </div>
-                </div>
+                  <!-- Right: Actions -->
+                  <div class="flex flex-col gap-2 ml-4">
+                    <!-- GROUP ACTIONS (for multi-ticket purchases) -->
+                    <template v-if="group.isGroup && group.tickets[0].receipt_validation_status === 'pending'">
+                      <button
+                        @click="showGroupReceiptValidationModal(group)"
+                        class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium transition-colors whitespace-nowrap"
+                      >
+                        Validación Pendiente ({{ group.tickets.length }} tickets)
+                      </button>
+                    </template>
 
-                <!-- Status and Actions -->
-                <div class="flex items-center space-x-4">
-                  <!-- Status Badge -->
-                  <div :class="getStatusBadgeClass(ticket)" class="px-3 py-1 rounded-lg text-sm font-medium">
-                    {{ getStatusLabel(ticket) }}
-                  </div>
-
-                  <!-- Actions -->
-                  <div class="flex space-x-2">
-                    <!-- Validate Receipt (only for pending) -->
-                    <button
-                      v-if="ticket.receipt_validation_status === 'pending'"
-                      @click="validateReceipt(ticket.id)"
-                      class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
-                    >
-                      Validar Recibo
-                    </button>
-
-                    <!-- Reject Receipt (only for pending) -->
-                    <button
-                      v-if="ticket.receipt_validation_status === 'pending'"
-                      @click="showRejectModal(ticket)"
-                      class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
-                    >
-                      Rechazar
-                    </button>
-
-                    <!-- Mark as Used (only for validated) -->
-                    <button
-                      v-if="ticket.receipt_validation_status === 'validated' && ticket.status === 'active'"
-                      @click="markAsUsed(ticket.id)"
-                      class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                    >
-                      Marcar como Usado
-                    </button>
-
-                    <!-- View Receipt -->
-                    <button
-                      v-if="ticket.metadata?.receipt_url"
-                      @click="viewReceipt(ticket.metadata.receipt_url)"
-                      class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
-                    >
-                      Ver Recibo
-                    </button>
+                    <!-- SINGLE TICKET ACTIONS -->
+                    <template v-if="!group.isGroup">
+                      <!-- Single "Validación Pendiente" button for pending receipts -->
+                      <button
+                        v-if="group.tickets[0].receipt_validation_status === 'pending'"
+                        @click="showReceiptValidationModal(group.tickets[0])"
+                        class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm transition-colors"
+                      >
+                        Validación Pendiente
+                      </button>
+                      <button
+                        v-if="group.tickets[0].receipt_validation_status === 'validated' && group.tickets[0].status === 'active'"
+                        @click="markAsUsed(group.tickets[0].id)"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                      >
+                        Marcar como Usado
+                      </button>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -335,7 +410,7 @@
       </div>
     </div>
 
-    <!-- Reject Modal -->
+    <!-- Reject Single Ticket Modal -->
     <div v-if="showRejectModalFlag" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
       <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full">
         <h3 class="text-lg font-semibold text-white mb-4">Rechazar Recibo</h3>
@@ -366,6 +441,163 @@
         </div>
       </div>
     </div>
+
+    <!-- Reject Group Modal -->
+    <div v-if="showRejectGroupModalFlag" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75">
+      <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold text-white mb-4">Rechazar Grupo de Tickets</h3>
+        
+        <div class="mb-4 p-3 bg-yellow-900/20 border border-yellow-700 rounded">
+          <p class="text-yellow-200 text-sm">
+            Se rechazarán {{ selectedGroup?.tickets.length }} tickets de esta compra grupal.
+          </p>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Motivo del Rechazo</label>
+          <textarea
+            v-model="rejectionReason"
+            rows="3"
+            placeholder="Explica por qué se rechaza este grupo..."
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          ></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="cancelRejectGroup"
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="confirmRejectGroup"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+          >
+            Rechazar Todos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipt Validation Modal -->
+    <div v-if="showReceiptValidationModalFlag" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90">
+      <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-white">Validación de Recibo</h3>
+          <button
+            @click="closeReceiptValidationModal"
+            class="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Ticket Info -->
+        <div class="mb-6 p-4 bg-gray-700 rounded-lg">
+          <div class="flex items-center gap-4 mb-3">
+            <!-- Mini QR Code -->
+            <div class="w-16 h-16 bg-white p-1 rounded">
+              <img 
+                :src="getQrCodeUrl(selectedTicketForValidation?.id || 0)" 
+                alt="QR"
+                class="w-full h-full"
+              />
+            </div>
+            <div>
+              <h4 class="text-lg font-semibold text-white">
+                <span v-if="selectedGroupForValidation?.isGroup">
+                  🎫 Compra Grupal #{{ selectedGroupForValidation?.groupId?.substring(0, 8) }}
+                </span>
+                <span v-else>
+                  🎫 Ticket #{{ selectedTicketForValidation?.ticket_number }}
+                </span>
+              </h4>
+              <p class="text-gray-300">{{ selectedTicketForValidation?.user?.name }}</p>
+              <p class="text-gray-400 text-sm">{{ selectedTicketForValidation?.user?.email }}</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-gray-400">Precio:</span>
+              <span class="text-white font-semibold ml-2">
+                ${{ formatPrice(selectedTicketForValidation?.price_paid?.toString() || '0') }}
+              </span>
+            </div>
+            <div>
+              <span class="text-gray-400">Comprado:</span>
+              <span class="text-white ml-2">{{ formatDate(selectedTicketForValidation?.purchased_at) }}</span>
+            </div>
+            <div v-if="selectedGroupForValidation?.isGroup" class="col-span-2">
+              <span class="text-gray-400">Total:</span>
+              <span class="text-white font-semibold ml-2">
+                ${{ formatPrice(selectedGroupForValidation?.totalAmount?.toString() || '0') }}
+              </span>
+              <span class="text-gray-400 ml-2">
+                ({{ selectedGroupForValidation?.tickets.length }} tickets)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Receipt Image -->
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold text-white mb-3">Recibo de Pago</h4>
+          <div class="relative">
+            <img
+              v-if="selectedTicketForValidation?.metadata?.receipt_url"
+              :src="selectedTicketForValidation.metadata.receipt_url"
+              alt="Recibo de pago"
+              class="w-full max-h-96 object-contain bg-gray-700 rounded-lg border border-gray-600 cursor-pointer hover:opacity-90 transition-opacity"
+              @click="viewReceipt(selectedTicketForValidation.metadata.receipt_url)"
+              @error="handleImageError"
+            />
+            <div v-else class="w-full h-64 bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-center">
+              <div class="text-center text-gray-400">
+                <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p>No hay imagen de recibo disponible</p>
+              </div>
+            </div>
+            <div v-if="selectedTicketForValidation?.metadata?.receipt_url" class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+              Click para abrir en nueva ventana
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center gap-4">
+          <button
+            @click="validateFromModal"
+            class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+            :disabled="isValidating"
+          >
+            <svg v-if="isValidating" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ isValidating ? 'Validando...' : 'Validar' }}
+          </button>
+          
+          <button
+            @click="showRejectFromModal"
+            class="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+            :disabled="isValidating"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -382,8 +614,17 @@ const config = useRuntimeConfig()
 
 const eventId = computed(() => parseInt(route.params.id as string))
 
-const { getEventTickets, validateReceipt: validateTicketReceipt, rejectReceipt: rejectTicketReceipt, markTicketAsUsed, verifyTicket } = useTickets()
+const { 
+  getEventTickets, 
+  validateReceipt: validateTicketReceipt, 
+  rejectReceipt: rejectTicketReceipt, 
+  validateReceiptGroup,
+  rejectReceiptGroup,
+  markTicketAsUsed, 
+  verifyTicket 
+} = useTickets()
 
+// State
 const event = ref<any>(null)
 const tickets = ref<Ticket[]>([])
 const stats = ref({
@@ -398,9 +639,16 @@ const error = ref('')
 const emailSearch = ref('')
 const statusFilter = ref('')
 const showRejectModalFlag = ref(false)
+const showRejectGroupModalFlag = ref(false)
+const showReceiptValidationModalFlag = ref(false)
 const selectedTicket = ref<Ticket | null>(null)
+const selectedGroup = ref<any | null>(null)
+const selectedTicketForValidation = ref<Ticket | null>(null)
+const selectedGroupForValidation = ref<any | null>(null)
 const rejectionReason = ref('')
 const qrError = ref(false)
+const expandedGroups = ref<Record<string, boolean>>({})
+const isValidating = ref(false)
 
 // QR Scanner state
 const showQrScanner = ref(false)
@@ -409,6 +657,7 @@ const scannerError = ref('')
 const availableCameras = ref<MediaDeviceInfo[]>([])
 const selectedCamera = ref<string>('')
 
+// Computed
 const totalTickets = computed(() => stats.value.total)
 
 const cameraConstraints = computed(() => {
@@ -422,28 +671,167 @@ const cameraConstraints = computed(() => {
   }
 })
 
-const filteredTickets = computed(() => {
-  let filtered = tickets.value
+// Group tickets by purchase_group_id
+interface TicketGroup {
+  id: string
+  groupId: string | null
+  isGroup: boolean
+  tickets: Ticket[]
+  totalAmount: number
+  status: string
+}
 
-  // Filter by status
-  if (statusFilter.value) {
-    if (statusFilter.value === 'used') {
-      filtered = filtered.filter(t => t.status === 'used')
+const groupedTickets = computed((): TicketGroup[] => {
+  const groups: Record<string, Ticket[]> = {}
+  const singles: Ticket[] = []
+
+  // Separate tickets into groups and singles
+  tickets.value.forEach(ticket => {
+    if (ticket.purchase_group_id) {
+      if (!groups[ticket.purchase_group_id]) {
+        groups[ticket.purchase_group_id] = []
+      }
+      groups[ticket.purchase_group_id].push(ticket)
     } else {
-      filtered = filtered.filter(t => t.receipt_validation_status === statusFilter.value)
+      singles.push(ticket)
     }
-  }
+  })
 
-  return filtered
+  const result: TicketGroup[] = []
+
+  // Add grouped tickets
+  Object.entries(groups).forEach(([groupId, groupTickets]) => {
+    const totalAmount = groupTickets.reduce((sum, t) => sum + t.price_paid, 0)
+    
+    // Determine group status (all tickets should have same status in a group)
+    const statuses = groupTickets.map(t => t.receipt_validation_status || t.status)
+    const uniqueStatuses = [...new Set(statuses)]
+    const groupStatus = uniqueStatuses.length === 1 ? uniqueStatuses[0] : 'mixed'
+
+    result.push({
+      id: groupId,
+      groupId: groupId,
+      isGroup: true,
+      tickets: groupTickets.sort((a, b) => a.id - b.id),
+      totalAmount,
+      status: groupStatus
+    })
+  })
+
+  // Add single tickets
+  singles.forEach(ticket => {
+    result.push({
+      id: `single-${ticket.id}`,
+      groupId: null,
+      isGroup: false,
+      tickets: [ticket],
+      totalAmount: ticket.price_paid,
+      status: ticket.receipt_validation_status || ticket.status
+    })
+  })
+
+  // Sort by purchased_at date (newest first)
+  return result.sort((a, b) => {
+    const dateA = new Date(a.tickets[0].purchased_at).getTime()
+    const dateB = new Date(b.tickets[0].purchased_at).getTime()
+    return dateB - dateA
+  })
 })
 
+const filteredGroups = computed(() => {
+  if (!statusFilter.value) {
+    return groupedTickets.value
+  }
+
+  return groupedTickets.value.filter(group => {
+    if (statusFilter.value === 'used') {
+      return group.tickets.some(t => t.status === 'used')
+    } else {
+      return group.tickets.some(t => t.receipt_validation_status === statusFilter.value)
+    }
+  })
+})
+
+// Methods
 const getQrCodeUrl = (ticketId: number) => {
   return `${config.public.apiUrl}/qr-ticket/${ticketId}`
+}
+
+const formatPrice = (price: string | number): string => {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price
+  return new Intl.NumberFormat('es-CL', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numPrice)
+}
+
+const getGroupBorderClass = (group: TicketGroup): string => {
+  const status = group.status
+  if (status === 'pending') return 'border-l-4 border-l-yellow-500'
+  if (status === 'validated') return 'border-l-4 border-l-green-500'
+  if (status === 'rejected') return 'border-l-4 border-l-red-500'
+  return ''
+}
+
+const getGroupStatusBadge = (group: TicketGroup): string => {
+  const status = group.status
+  
+  if (group.tickets[0].payment_method === 'free') {
+    return 'bg-green-900 text-green-300 border border-green-700'
+  }
+  
+  if (status === 'pending') {
+    return 'bg-yellow-900 text-yellow-300 border border-yellow-700'
+  }
+  
+  if (status === 'rejected') {
+    return 'bg-red-900 text-red-300 border border-red-700'
+  }
+  
+  if (status === 'used' || group.tickets.some(t => t.status === 'used')) {
+    return 'bg-blue-900 text-blue-300 border border-blue-700'
+  }
+  
+  if (status === 'validated') {
+    return 'bg-green-900 text-green-300 border border-green-700'
+  }
+  
+  return 'bg-gray-700 text-gray-300 border border-gray-600'
+}
+
+const getGroupStatusLabel = (group: TicketGroup): string => {
+  if (group.tickets[0].payment_method === 'free') {
+    return 'GRATIS'
+  }
+  
+  // Check for used tickets FIRST (before other statuses)
+  const usedCount = group.tickets.filter(t => t.status === 'used').length
+  if (usedCount > 0) {
+    if (usedCount === group.tickets.length) {
+      // If all tickets are used, check if it's a single ticket or multiple
+      return group.tickets.length === 1 ? 'USADO' : 'TODOS USADOS'
+    }
+    return `${usedCount}/${group.tickets.length} USADOS`
+  }
+  
+  const status = group.status
+  
+  if (status === 'pending') return 'PENDIENTE'
+  if (status === 'rejected') return 'RECHAZADO'
+  if (status === 'validated') return 'VALIDADO'
+  if (status === 'mixed') return 'MIXTO'
+  
+  return status.toUpperCase()
 }
 
 const getStatusBadgeClass = (ticket: Ticket) => {
   if (ticket.payment_method === 'free') {
     return 'bg-green-900 text-green-300 border border-green-700'
+  }
+  
+  // Check for used status FIRST (before validation status)
+  if (ticket.status === 'used') {
+    return 'bg-blue-900 text-blue-300 border border-blue-700'
   }
   
   if (ticket.receipt_validation_status === 'pending') {
@@ -452,10 +840,6 @@ const getStatusBadgeClass = (ticket: Ticket) => {
   
   if (ticket.receipt_validation_status === 'rejected') {
     return 'bg-red-900 text-red-300 border border-red-700'
-  }
-  
-  if (ticket.status === 'used') {
-    return 'bg-gray-700 text-gray-300 border border-gray-600'
   }
   
   if (ticket.receipt_validation_status === 'validated') {
@@ -489,6 +873,10 @@ const getStatusLabel = (ticket: Ticket) => {
   return ticket.status.toUpperCase()
 }
 
+const toggleGroupExpanded = (groupId: string) => {
+  expandedGroups.value[groupId] = !expandedGroups.value[groupId]
+}
+
 const searchByEmail = async () => {
   if (!emailSearch.value.trim()) return
   
@@ -500,7 +888,6 @@ const searchByEmail = async () => {
       tickets.value = searchResults
       updateStats()
     } else {
-      // Show no results message
       tickets.value = []
     }
   } catch (err: any) {
@@ -510,11 +897,11 @@ const searchByEmail = async () => {
   }
 }
 
+// Single ticket validation
 const validateReceipt = async (ticketId: number) => {
   try {
     await validateTicketReceipt(ticketId)
     
-    // Update local state instead of reloading
     const ticketIndex = tickets.value.findIndex(t => t.id === ticketId)
     if (ticketIndex !== -1) {
       tickets.value[ticketIndex].receipt_validation_status = 'validated'
@@ -527,15 +914,50 @@ const validateReceipt = async (ticketId: number) => {
   }
 }
 
+// Group validation
+const validateGroup = async (groupId: string) => {
+  try {
+    isLoading.value = true
+    const result = await validateReceiptGroup(groupId)
+    
+    // Update local state for all tickets in the group
+    tickets.value.forEach(ticket => {
+      if (ticket.purchase_group_id === groupId) {
+        ticket.receipt_validation_status = 'validated'
+        ticket.receipt_validated_at = new Date().toISOString()
+        ticket.updated_at = new Date().toISOString()
+      }
+    })
+    
+    updateStats()
+  } catch (err: any) {
+    error.value = err.message || 'Error al validar el grupo'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const showRejectModal = (ticket: Ticket) => {
   selectedTicket.value = ticket
   rejectionReason.value = ''
   showRejectModalFlag.value = true
 }
 
+const showRejectGroupModal = (group: TicketGroup) => {
+  selectedGroup.value = group
+  rejectionReason.value = ''
+  showRejectGroupModalFlag.value = true
+}
+
 const cancelReject = () => {
   showRejectModalFlag.value = false
   selectedTicket.value = null
+  rejectionReason.value = ''
+}
+
+const cancelRejectGroup = () => {
+  showRejectGroupModalFlag.value = false
+  selectedGroup.value = null
   rejectionReason.value = ''
 }
 
@@ -545,7 +967,6 @@ const confirmReject = async () => {
   try {
     await rejectTicketReceipt(selectedTicket.value.id, rejectionReason.value)
     
-    // Update local state instead of reloading
     const ticketIndex = tickets.value.findIndex(t => t.id === selectedTicket.value!.id)
     if (ticketIndex !== -1) {
       tickets.value[ticketIndex].receipt_validation_status = 'rejected'
@@ -561,11 +982,36 @@ const confirmReject = async () => {
   }
 }
 
+const confirmRejectGroup = async () => {
+  if (!selectedGroup.value) return
+  
+  try {
+    isLoading.value = true
+    await rejectReceiptGroup(selectedGroup.value.groupId, rejectionReason.value)
+    
+    // Update local state for all tickets in the group
+    tickets.value.forEach(ticket => {
+      if (ticket.purchase_group_id === selectedGroup.value.groupId) {
+        ticket.receipt_validation_status = 'rejected'
+        ticket.rejection_reason = rejectionReason.value
+        ticket.receipt_rejected_at = new Date().toISOString()
+        ticket.updated_at = new Date().toISOString()
+      }
+    })
+    
+    updateStats()
+    cancelRejectGroup()
+  } catch (err: any) {
+    error.value = err.message || 'Error al rechazar el grupo'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const markAsUsed = async (ticketId: number) => {
   try {
     await markTicketAsUsed(ticketId)
     
-    // Update local state instead of reloading
     const ticketIndex = tickets.value.findIndex(t => t.id === ticketId)
     if (ticketIndex !== -1) {
       tickets.value[ticketIndex].status = 'used'
@@ -580,6 +1026,61 @@ const markAsUsed = async (ticketId: number) => {
 
 const viewReceipt = (receiptUrl: string) => {
   window.open(receiptUrl, '_blank')
+}
+
+// New methods for receipt validation modal
+const showReceiptValidationModal = (ticket: Ticket) => {
+  selectedTicketForValidation.value = ticket
+  selectedGroupForValidation.value = null
+  showReceiptValidationModalFlag.value = true
+}
+
+const showGroupReceiptValidationModal = (group: TicketGroup) => {
+  selectedGroupForValidation.value = group
+  selectedTicketForValidation.value = group.tickets[0]
+  showReceiptValidationModalFlag.value = true
+}
+
+const closeReceiptValidationModal = () => {
+  showReceiptValidationModalFlag.value = false
+  selectedTicketForValidation.value = null
+  selectedGroupForValidation.value = null
+  isValidating.value = false
+}
+
+const validateFromModal = async () => {
+  if (!selectedTicketForValidation.value) return
+  
+  try {
+    isValidating.value = true
+    
+    if (selectedGroupForValidation.value?.isGroup) {
+      // Validate entire group
+      await validateGroup(selectedGroupForValidation.value.groupId)
+    } else {
+      // Validate single ticket
+      await validateReceipt(selectedTicketForValidation.value.id)
+    }
+    
+    closeReceiptValidationModal()
+  } catch (err: any) {
+    error.value = err.message || 'Error al validar el recibo'
+  } finally {
+    isValidating.value = false
+  }
+}
+
+const showRejectFromModal = () => {
+  if (selectedGroupForValidation.value?.isGroup) {
+    showRejectGroupModal(selectedGroupForValidation.value)
+  } else if (selectedTicketForValidation.value) {
+    showRejectModal(selectedTicketForValidation.value)
+  }
+  closeReceiptValidationModal()
+}
+
+const handleImageError = () => {
+  console.error('Error loading receipt image')
 }
 
 const loadTickets = async () => {
@@ -623,7 +1124,7 @@ const formatDate = (dateString: string | undefined) => {
   }).format(date)
 }
 
-// QR Scanner methods - SIMPLIFIED
+// QR Scanner methods
 const openQrScanner = async () => {
   showQrScanner.value = true
   scannedTicket.value = null
@@ -631,12 +1132,10 @@ const openQrScanner = async () => {
   availableCameras.value = []
   selectedCamera.value = ''
   
-  // Simple: just enumerate devices after a brief delay for permissions
   setTimeout(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
       availableCameras.value = devices.filter(device => device.kind === 'videoinput')
-      console.log('Available cameras:', availableCameras.value.map(c => ({ label: c.label, id: c.deviceId.substring(0, 20) })))
     } catch (err) {
       console.error('Could not enumerate devices:', err)
     }
@@ -652,7 +1151,6 @@ const closeQrScanner = () => {
 }
 
 const switchCamera = () => {
-  // Just update the selected camera - component will reinitialize with :key binding
   console.log('Switching to camera:', selectedCamera.value)
 }
 
@@ -666,7 +1164,6 @@ const onDetect = async (detectedCodes: any[]) => {
     const result = detectedCodes[0].rawValue
     
     try {
-      // Extract token and qr parameters from the scanned URL
       const url = new URL(result)
       const token = url.searchParams.get('token')
       const qr = url.searchParams.get('qr')
@@ -676,11 +1173,9 @@ const onDetect = async (detectedCodes: any[]) => {
         return
       }
       
-      // Verify the ticket
       const verificationResult = await verifyTicket(token, qr)
       scannedTicket.value = verificationResult
       
-      // Update local state instead of reloading all tickets
       updateLocalTicketState(verificationResult)
     } catch (err: any) {
       scannerError.value = err.message || 'Error al verificar el ticket'
@@ -692,7 +1187,6 @@ const markScannedTicketAsUsed = async () => {
   if (!scannedTicket.value) return
   
   try {
-    // Extract ticket ID from the scanned ticket data
     const ticketId = scannedTicket.value.ticket?.id || scannedTicket.value.ticket_id
     
     if (!ticketId) {
@@ -702,10 +1196,8 @@ const markScannedTicketAsUsed = async () => {
     
     await markAsUsed(ticketId)
     
-    // Update local state instead of reloading all tickets
     updateLocalTicketAfterMarkAsUsed(ticketId)
     
-    // Update the scanned ticket data
     if (scannedTicket.value.ticket) {
       scannedTicket.value.ticket.status = 'used'
       scannedTicket.value.ticket.used_at = new Date().toISOString()
@@ -721,7 +1213,6 @@ const scanAnother = () => {
   scannerError.value = ''
 }
 
-// Helper functions for local state updates
 const updateLocalTicketState = (verificationResult: any) => {
   if (!verificationResult?.ticket?.id) return
   
@@ -729,7 +1220,6 @@ const updateLocalTicketState = (verificationResult: any) => {
   const existingTicketIndex = tickets.value.findIndex(t => t.id === ticketId)
   
   if (existingTicketIndex !== -1) {
-    // Update existing ticket with latest data from verification
     tickets.value[existingTicketIndex] = {
       ...tickets.value[existingTicketIndex],
       ...verificationResult.ticket,
@@ -738,47 +1228,8 @@ const updateLocalTicketState = (verificationResult: any) => {
         email: verificationResult.holder.email
       } : tickets.value[existingTicketIndex].user
     }
-  } else {
-    // Add new ticket to the list if it doesn't exist
-    const newTicket: Ticket = {
-      id: verificationResult.ticket.id,
-      ticket_number: verificationResult.ticket.ticket_number,
-      status: verificationResult.ticket.status,
-      price_paid: verificationResult.ticket.price_paid,
-      purchased_at: verificationResult.ticket.purchased_at,
-      used_at: verificationResult.ticket.used_at,
-      receipt_validation_status: verificationResult.ticket.receipt_validation_status,
-      payment_method: verificationResult.ticket.payment_method,
-      formatted_price: verificationResult.ticket.formatted_price,
-      user: verificationResult.holder ? {
-        name: verificationResult.holder.name,
-        email: verificationResult.holder.email
-      } : null,
-      // Add other required fields with defaults
-      user_id: 0,
-      event_id: eventId.value,
-      price_tag_name: '',
-      original_price: '0.00',
-      cancelled_at: null,
-      refunded_at: null,
-      payment_reference: null,
-      payment_status: 'completed',
-      rejection_reason: null,
-      receipt_validated_at: null,
-      receipt_rejected_at: null,
-      qr_code: '',
-      validation_token: '',
-      metadata: null,
-      notes: null,
-      purchased_by_ip: '',
-      user_agent: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-    tickets.value.push(newTicket)
   }
   
-  // Update stats
   updateStats()
 }
 
@@ -789,7 +1240,6 @@ const updateLocalTicketAfterMarkAsUsed = (ticketId: number) => {
     tickets.value[ticketIndex].used_at = new Date().toISOString()
     tickets.value[ticketIndex].updated_at = new Date().toISOString()
     
-    // Update stats
     updateStats()
   }
 }
